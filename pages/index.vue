@@ -10,7 +10,7 @@ useSeoMeta({
   description: "Unwrap your Last.fm",
   ogDescription: "Unwrap your Last.fm",
   ogImage: "/toptop-og.jpg",
-  ogUrl: "[og:url]",
+  ogUrl: "https://top-top.netlify.app",
   twitterTitle: "Toptop",
   twitterDescription: "Unwrap your Last.fm",
   twitterImage: "/toptop-og-twitter.jpg",
