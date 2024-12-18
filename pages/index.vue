@@ -726,7 +726,7 @@ const getPalette = (c) => {
       <div v-if="load" class="w-full">
         <button
           type="button"
-          @click="handleSave(imgPrint)"
+          @click="handleSave(genImg)"
           class="block w-full rounded-md bg-slate-700/50 px-3.5 leading-tight py-2.5 text-center text-base font-semibold text-white shadow-sm hover:bg-slate-800/50 focus-visible:outline focus-visible:outline-1 focus-visible:outline-offset-2 focus-visible:outline-white"
         >
           Save
