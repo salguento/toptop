@@ -20,7 +20,7 @@ onMounted(async () => {
     };
 
     p5.draw = () => {
-      p5.background(0, 0, 0, 100); //black
+      p5.background(229, 91, 9, 100); //slate-950 in HSB
       p5.translate(p5.width / 2, p5.height / 2);
       angleSp = p5.float((p5.frameCount / 200.0) * p5.TWO_PI);
       p5.rotate(-p5.HALF_PI);

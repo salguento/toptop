@@ -4,6 +4,14 @@ import { extractColors } from "extract-colors";
 import domtoimage from "dom-to-image-more";
 import { genreList } from "./genreList.js";
 
+useSeoMeta({
+  title: "Toptop",
+  ogTitle: "Toptop",
+  description: "Unwrap your Last.fm",
+  ogDescription: "Unwrap your Last.fm",
+  ogImage: "/toptop-og.jpg",
+});
+
 const apiRoot = "https://ws.audioscrobbler.com/2.0/?";
 const key = config.public.apiKey;
 const user = ref([
@@ -26,7 +34,7 @@ const month = date.getMonth() + 1;
 const year = date.getFullYear();
 const fullDate = day + "/" + month + "/" + year;
 
-const err = ref("");
+const errMsg = ref("");
 
 let tracks = [];
 let artists = [];
@@ -50,7 +58,7 @@ const uGetInfo = async (u, k) => {
     let e = data.user.image[1];
     user.value.img = e["#text"];
   } catch (err) {
-    console.log(err.response._data.error);
+    errCheck(err.response._data.error);
   }
 };
 
@@ -135,9 +143,7 @@ const getTopTags = async (a) => {
         genres.push(data.toptags.tag[i].name);
       }
     }
-  } catch (err) {
-    console.log(err);
-  }
+  } catch (err) {}
 };
 
 const mostGenre = (arr) => {
@@ -175,11 +181,15 @@ const uGetArtists = async (u, p, k) => {
 
 const handleClick = async (u, p, k) => {
   clear();
+  errCheck();
+  if (errMsg.value) {
+    return;
+  }
   btnState();
   try {
     await uGetInfo(u, k);
   } catch (err) {
-    console.log("No user found");
+    return;
   }
   try {
     await uGetTracks(u, p, k);
@@ -189,14 +199,79 @@ const handleClick = async (u, p, k) => {
   } catch (err) {
     console.log(err);
   }
+  try {
+    if (tracks.length > 0 && albums.length > 0 && artists.length > 0) {
+      setTimespan();
+      load.value = true;
+      setTimeout(() => addColors(), 750);
+      setTimeout(() => print(), 1250);
+      // setTimeout(() => btnState(), 1750);
+      setTimeout(() => (imgPrint.value = true), 2500);
+    }
+  } catch (err) {
+    console.log(err);
+  } finally {
+    btnState();
+  }
+};
 
-  if (tracks.length > 0 && albums.length > 0 && artists.length > 0) {
-    setTimespan();
-    load.value = true;
-    setTimeout(() => addColors(), 500);
-    setTimeout(() => print(), 1000);
-    setTimeout(() => btnState(), 1500);
-    setTimeout(() => (imgPrint.value = true), 2000);
+const errCheck = (e = "") => {
+  if (!e && !user.value.name) {
+    errMsg.value = "Please inform a valid Last.fm username.";
+  } else if (e) {
+    switch (e) {
+      case 2:
+        errMsg.value = "Invalid service - This service does not exist";
+        break;
+      case 3:
+        errMsg.value =
+          "Invalid Method - No method with that name in this package";
+        break;
+      case 4:
+        errMsg.value =
+          "Authentication Failed - You do not have permissions to access the service";
+        break;
+      case 5:
+        errMsg.value =
+          "Invalid format - This service doesn't exist in that format";
+        break;
+      case 6:
+        errMsg.value =
+          "Invalid parameters - Your request is missing a required parameter";
+        break;
+      case 7:
+        errMsg.value = "Invalid resource specified";
+        break;
+      case 8:
+        errMsg.value = "Operation failed - Something else went wrong";
+        break;
+      case 9:
+        errMsg.value = "Invalid session key - Please re-authenticate";
+        break;
+      case 10:
+        errMsg.value =
+          "Invalid API key - You must be granted a valid key by last.fm";
+        break;
+      case 11:
+        errMsg.value =
+          "Service Offline - This service is temporarily offline. Try again later.";
+        break;
+      case 13:
+        errMsg.value = "Invalid method signature supplied";
+        break;
+      case 16:
+        errMsg.value =
+          "There was a temporary error processing your request. Please try again";
+        break;
+      case 26:
+        errMsg.value =
+          "Suspended API key - Access for your account has been suspended, please contact Last.fm";
+        break;
+      case 29:
+        errMsg.value =
+          "Rate limit exceeded - Your IP has made too many requests in a short period";
+        break;
+    }
   }
 };
 
@@ -258,10 +333,10 @@ const setTimespan = () => {
       timespan.value = "Monthly";
       break;
     case "3month":
-      timespan.value = "Trimestral";
+      timespan.value = "Quarterly";
       break;
     case "6month":
-      timespan.value = "Semestral";
+      timespan.value = "Biannually";
       break;
     case "12month":
       timespan.value = "Yearly";
@@ -314,6 +389,7 @@ const clear = () => {
   load.value = false;
   timespan.value = "";
   g.value = "";
+  errMsg.value = "";
 
   tracks = [];
   artists = [];
@@ -385,25 +461,34 @@ const getPalette = (c) => {
   } else if (pLightness < 2.5) {
     text = lightHex(c);
     if (text == primary || text == secondary) {
+      console.log("first if");
       text = darkHex(c);
     }
   } else {
     text = darkHex(c);
     if (text == primary || text == secondary) {
+      console.log("second if");
       text = lightHex(c);
     }
   }
+
+  if (primary === text || secondary === text) {
+    text = secondary;
+    secondary = primary;
+  }
+  console.log(c);
+  console.log(primary, secondary, text);
   return { primary: primary, secondary: secondary, text: text };
 };
 </script>
 
 <template>
   <div
-    class="w-screen h-screen flex justify-center items-center p-12 overflow-hidden"
+    class="w-screen h-screen flex justify-center items-center p-2 md:p-12 overflow-hidden"
   >
     <Canvas />
     <div
-      class="w-full container md:max-w-xl max-h-full h-fit overflow-scroll outline outline-1 outline-slate-800/50 rounded-3xl p-8 bg-slate-500/10 backdrop-blur-lg flex flex-col items-center gap-2"
+      class="w-full container md:max-w-xl max-h-full h-fit overflow-scroll outline outline-1 outline-slate-800/50 rounded-xl p-4 md:p-8 bg-slate-500/10 backdrop-blur-lg flex flex-col items-center gap-2"
     >
       <div class="flex flex-col mb-4">
         <div class="w-full flex justify-center items center gap-4 mb-2">
@@ -412,7 +497,7 @@ const getPalette = (c) => {
             toptop
           </h1>
         </div>
-        <p class="text-white/75 text-center">Let's funk it!</p>
+        <p class="text-white/75 text-center">Spotlight your tops!</p>
         <p class="text-white/50 text-center text-xs">Powered by Last.fm</p>
       </div>
       <div class="flex flex-row gap-2 w-full">
@@ -424,7 +509,7 @@ const getPalette = (c) => {
             id="username"
             autocomplete="given-name"
             placeholder="username"
-            class="block w-full rounded-md bg-slate-700/50 px-3.5 py-2 text-base text-white focus:outline -outline-offset-2 outline-slate-300/50 placeholder:text-slate-400 focus:-outline-offset-2 focus:outline-white"
+            class="block w-full rounded-lg bg-slate-700/50 px-3.5 py-2 text-base text-white focus:outline -outline-offset-2 outline-slate-300/50 placeholder:text-slate-400 focus:-outline-offset-2 focus:outline-white"
           />
         </div>
 
@@ -435,14 +520,14 @@ const getPalette = (c) => {
             name="country"
             autocomplete="country"
             aria-label="Country"
-            class="col-start-1 row-start-1 w-full appearance-none rounded-md py-2 pl-3.5 pr-7 text-base text-white focus:outline focus:-outline-offset-2 focus:outline-white sm:text-sm/6 bg-slate-700/50"
+            class="col-start-1 row-start-1 w-full appearance-none rounded-lg py-2 pl-3.5 pr-7 text-base text-white focus:outline focus:-outline-offset-2 focus:outline-white sm:text-sm/6 bg-slate-700/50"
           >
-            <option value="7day">Semanal</option>
-            <option value="1month">Mensal</option>
-            <option value="3month">Trimestral</option>
-            <option value="6month">Semestral</option>
-            <option value="12month">Anual</option>
-            <option value="overall">Geral</option>
+            <option value="7day">Weekly</option>
+            <option value="1month">Monthly</option>
+            <option value="3month">Quarterly</option>
+            <option value="6month">Biannually</option>
+            <option value="12month">Yearly</option>
+            <option value="overall">Overall</option>
           </select>
           <svg
             class="pointer-events-none col-start-1 row-start-1 mr-2 size-5 self-center justify-self-end text-slate-700 sm:size-4"
@@ -459,8 +544,8 @@ const getPalette = (c) => {
           </svg>
         </div>
       </div>
-      <div v-if="err">
-        <p>{{ err }}</p>
+      <div v-if="errMsg" class="w-full bg-red-500/40 rounded-full">
+        <p class="text-red-200 text-center font-medium">{{ errMsg }}</p>
       </div>
       <div class="w-full">
         <button
@@ -487,16 +572,12 @@ const getPalette = (c) => {
               fill="currentColor"
             />
           </svg>
-          {{ loading ? "Carregando" : "Gerar" }}
+          {{ loading ? "Loading" : "Generate" }}
         </button>
       </div>
 
-      <div
-        id="print"
-        class="w-[386px] h-full flex flex-col justify-center"
-      ></div>
-      <div id="canvas" class="absolute w-[1080px] h-[1920px] left-[10000px]">
-        <!-- <div id="canvas" class="relative w-[1080px] h-[1920px]"> -->
+      <div id="print" class="w-3/6 flex flex-col justify-center"></div>
+      <div id="canvas" class="absolute left-[10000px] overflow-hidden">
         <div id="background" class="absolute z-10 w-[1080px] h-[1920px]"></div>
         <div id="post" class="absolute z-20 w-[1080px] h-[1920px]">
           <div
@@ -630,10 +711,21 @@ const getPalette = (c) => {
           @click="handleSave(imgPrint)"
           class="block w-full rounded-md bg-slate-700/50 px-3.5 leading-tight py-2.5 text-center text-base font-semibold text-white shadow-sm hover:bg-slate-800/50 focus-visible:outline focus-visible:outline-1 focus-visible:outline-offset-2 focus-visible:outline-white"
         >
-          Salvar
+          Save
         </button>
       </div>
     </div>
+    <footer class="absolute bottom-1 w-full flex justify-center">
+      <div
+        class="bg-slate-500/10 px-2 pb-0.5 rounded-full backdrop-blur-lg outline-slate-800/50"
+      >
+        <a
+          href="https://salguento.xyz"
+          class="text-white/80 w-full text-xs leading-none"
+          >salguento 👾 {{ year }}
+        </a>
+      </div>
+    </footer>
   </div>
 </template>
 
@@ -643,10 +735,10 @@ body {
 }
 
 .container {
-  -ms-overflow-style: none; /* Internet Explorer 10+ */
-  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 .container::-webkit-scrollbar {
-  display: none; /* Safari and Chrome */
+  display: none;
 }
 </style>
