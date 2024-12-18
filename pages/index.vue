@@ -10,6 +10,24 @@ useSeoMeta({
   description: "Unwrap your Last.fm",
   ogDescription: "Unwrap your Last.fm",
   ogImage: "/toptop-og.jpg",
+  ogUrl: "[og:url]",
+  twitterTitle: "Toptop",
+  twitterDescription: "Unwrap your Last.fm",
+  twitterImage: "/toptop-og-twitter.jpg",
+  twitterCard: "summary",
+});
+
+useHead({
+  htmlAttrs: {
+    lang: "en",
+  },
+  link: [
+    {
+      rel: "icon",
+      type: "image/png",
+      href: "/favicon.png",
+    },
+  ],
 });
 
 const apiRoot = "https://ws.audioscrobbler.com/2.0/?";
@@ -491,13 +509,13 @@ const getPalette = (c) => {
       class="w-full container md:max-w-xl max-h-full h-fit overflow-scroll outline outline-1 outline-slate-800/50 rounded-xl p-4 md:p-8 bg-slate-500/10 backdrop-blur-lg flex flex-col items-center gap-2"
     >
       <div class="flex flex-col mb-4">
-        <div class="w-full flex justify-center items center gap-4 mb-2">
+        <div class="w-full flex justify-center items center gap-2 mb-2">
           <img class="h-10" src="/toptop.svg" />
           <h1 class="text-white text-3xl font-bold leading-none pt-1">
             toptop
           </h1>
         </div>
-        <p class="text-white/75 text-center">Spotlight your tops!</p>
+        <p class="text-white/75 text-center">Spotlight your tops</p>
         <p class="text-white/50 text-center text-xs">Powered by Last.fm</p>
       </div>
       <div class="flex flex-row gap-2 w-full">
