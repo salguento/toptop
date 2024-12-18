@@ -9,11 +9,11 @@ useSeoMeta({
   ogTitle: "Toptop",
   description: "Unwrap your Last.fm",
   ogDescription: "Unwrap your Last.fm",
-  ogImage: "/toptop-og.jpg",
+  ogImage: "/toptop-og.jpeg",
   ogUrl: "https://top-top.netlify.app",
   twitterTitle: "Toptop",
   twitterDescription: "Unwrap your Last.fm",
-  twitterImage: "/toptop-og-twitter.jpg",
+  twitterImage: "/toptop-og-twitter.jpeg",
   twitterCard: "summary",
 });
 
