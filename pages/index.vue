@@ -2,7 +2,7 @@
 const config = useRuntimeConfig();
 import { extractColors } from "extract-colors";
 import domtoimage from "dom-to-image-more";
-import { genreList } from "./genreList.js";
+import genreList from "./utils/genreList";
 
 useSeoMeta({
   title: "Toptop",
@@ -10,7 +10,7 @@ useSeoMeta({
   description: "Unwrap your Last.fm",
   ogDescription: "Unwrap your Last.fm",
   ogImage: "/toptop-og.jpeg",
-  ogUrl: "https://top-top.netlify.app",
+  ogUrl: "https://toptop.salguento.xyz",
   twitterTitle: "Toptop",
   twitterDescription: "Unwrap your Last.fm",
   twitterImage: "/toptop-og-twitter.jpeg",
