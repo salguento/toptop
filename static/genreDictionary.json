@@ -1,5 +1,5 @@
-const genreList = () => {
-  return [
+{
+  "genres": [
     "2 tone",
     "2-step",
     "aak",
@@ -2000,8 +2000,6 @@ const genreList = () => {
     "zouglou",
     "zouk",
     "zouk love",
-    "zydeco",
-  ];
-};
-
-export default genreList;
+    "zydeco"
+  ]
+}

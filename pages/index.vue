@@ -1,9 +1,21 @@
 <script setup>
-const config = useRuntimeConfig();
+import { storeToRefs } from "pinia";
 import { extractColors } from "extract-colors";
 import domtoimage from "dom-to-image-more";
-import genreList from "./utils/genreList";
-
+// Dictionary
+import genreList from "~/static/genreDictionary.json";
+// Store
+// import { useTopTopStore } from "@/stores/TopTopStore";
+// Composables
+import useGetUserImage from "~/composables/useLastFm/useGetUserImage";
+import useGetTracks from "~/composables/useLastFm/useGetUserTracks";
+import useGetAlbums from "~/composables/useLastFm/useGetAlbums";
+import useGetArtists from "~/composables/useLastFm/useGetArtists";
+//Utils
+import getColors from "~/utils/getColors";
+import getPalette from "~/utils/getPalette";
+import LastFmErrorCheck from "~/utils/LastFmErrorCheck";
+// Meta
 useSeoMeta({
   title: "Toptop",
   ogTitle: "Toptop",
@@ -29,9 +41,14 @@ useHead({
     },
   ],
 });
-
-const apiRoot = "https://ws.audioscrobbler.com/2.0/?";
+// Local variables
+const config = useRuntimeConfig();
+const apiRoot = config.public.apiBase;
 const key = config.public.apiKey;
+
+// const topTopStore = useTopTopStore();
+// const { albums, number1, grid, genres, colors, user, tracks, artists } =
+//   storeToRefs(topTopStore);
 const user = ref([
   {
     name: "",
@@ -54,242 +71,47 @@ const fullDate = day + "/" + month + "/" + year;
 
 const errMsg = ref("");
 
-let tracks = [];
+let tracks = {};
 let artists = [];
 let albums = [];
 let number1 = [];
 let grid = [];
 let genres = [];
-let trackCount;
 let colors = [];
-
-const uGetInfo = async (u, k) => {
-  try {
-    const data = await $fetch(
-      apiRoot +
-        "method=user.getinfo&user=" +
-        u +
-        "&api_key=" +
-        k +
-        "&format=json "
-    );
-    let e = data.user.image[1];
-    user.value.img = e["#text"];
-  } catch (err) {
-    errCheck(err.response._data.error);
-  }
-};
-
-const uGetTracks = async (u, p, k) => {
-  try {
-    const data = await $fetch(
-      apiRoot +
-        "method=user.gettoptracks&user=" +
-        u +
-        "&period=" +
-        p +
-        "&api_key=" +
-        k +
-        "&format=json "
-    );
-    trackCount = data.toptracks["@attr"].total;
-    for (let i = 0; i < 5; i++) {
-      tracks.push({
-        track: data.toptracks.track[i].name,
-        count: data.toptracks.track[i].playcount,
-      });
-    }
-  } catch (err) {
-    console.log(err);
-  }
-};
-
-const uGetAlbums = async (u, p, k) => {
-  try {
-    const data = await $fetch(
-      apiRoot +
-        "method=user.gettopalbums&user=" +
-        u +
-        "&period=" +
-        p +
-        "&api_key=" +
-        k +
-        "&format=json "
-    );
-    for (let i = 1; i < 5; i++) {
-      albums.push({
-        album: data.topalbums.album[i].name,
-        artist: data.topalbums.album[i].artist.name,
-        count: data.topalbums.album[i].playcount,
-        image: data.topalbums.album[i].image[3],
-      });
-    }
-    for (let i = 0; i < 9; i++) {
-      await getTopTags(data.topalbums.album[i]);
-      if (i === 0) {
-        number1.push({
-          album: data.topalbums.album[i].name,
-          artist: data.topalbums.album[i].artist.name,
-          count: data.topalbums.album[i].playcount,
-          image: data.topalbums.album[i].image[3],
-        });
-      } else if (i > 0 && i < 9) {
-        grid.push(data.topalbums.album[i].image[3]);
-      }
-    }
-    g.value = mostGenre(genres);
-  } catch (err) {
-    console.log(err);
-  }
-};
-
-const getTopTags = async (a) => {
-  try {
-    const data = await $fetch(
-      apiRoot +
-        "method=album.gettoptags&artist=" +
-        a.artist["name"] +
-        "&album=" +
-        a.name +
-        "&api_key=" +
-        key +
-        "&format=json "
-    );
-    // console.log(data.toptags.tag[5].name);
-    for (let i = 0; i < 5; i++) {
-      if (genreList.indexOf(data.toptags.tag[i].name) > -1) {
-        genres.push(data.toptags.tag[i].name);
-      }
-    }
-  } catch (err) {}
-};
-
-const mostGenre = (arr) => {
-  return arr
-    .sort(
-      (a, b) =>
-        arr.filter((v) => v === a).length - arr.filter((v) => v === b).length
-    )
-    .pop();
-};
-
-const uGetArtists = async (u, p, k) => {
-  try {
-    const data = await $fetch(
-      apiRoot +
-        "method=user.gettopartists&user=" +
-        u +
-        "&period=" +
-        p +
-        "&api_key=" +
-        k +
-        "&format=json "
-    );
-    for (let i = 0; i < 5; i++) {
-      artists.push({
-        artist: data.topartists.artist[i].name,
-        count: data.topartists.artist[i].playcount,
-        image: data.topartists.artist[i].image[3],
-      });
-    }
-  } catch (err) {
-    console.log(err);
-  }
-};
+let mess = {};
 
 const handleClick = async (u, p, k) => {
   clear();
-  errCheck();
+  errMsg.value = LastFmErrorCheck(user.value.name);
   if (errMsg.value) {
     return;
   }
   btnState();
   try {
-    await uGetInfo(u, k);
+    user.value.img = await useGetUserImage(u, k);
+    tracks = await useGetTracks(u, p, k);
+    mess = await useGetAlbums(u, p, k);
+    artists = await useGetArtists(u, p, k);
+    colors = await getColors(mess.number1[0].image["#text"]);
   } catch (err) {
     return;
   }
   try {
-    await uGetTracks(u, p, k);
-    await uGetArtists(u, p, k);
-    await uGetAlbums(u, p, k);
-    await getColors();
-  } catch (err) {
-    console.log(err);
-  }
-  try {
-    if (tracks.length > 0 && albums.length > 0 && artists.length > 0) {
+    if (
+      tracks.tracks.length > 0 &&
+      mess.albums.length > 0 &&
+      artists.length > 0
+    ) {
       setTimespan();
       load.value = true;
       setTimeout(() => addColors(), 750);
       setTimeout(() => print(), 1250);
-      // setTimeout(() => btnState(), 1750);
-      setTimeout(() => (imgPrint.value = true), 2500);
+      setTimeout(() => (imgPrint.value = true), 5000);
     }
   } catch (err) {
     console.log(err);
   } finally {
     btnState();
-  }
-};
-
-const errCheck = (e = "") => {
-  if (!e && !user.value.name) {
-    errMsg.value = "Please inform a valid Last.fm username.";
-  } else if (e) {
-    switch (e) {
-      case 2:
-        errMsg.value = "Invalid service - This service does not exist";
-        break;
-      case 3:
-        errMsg.value =
-          "Invalid Method - No method with that name in this package";
-        break;
-      case 4:
-        errMsg.value =
-          "Authentication Failed - You do not have permissions to access the service";
-        break;
-      case 5:
-        errMsg.value =
-          "Invalid format - This service doesn't exist in that format";
-        break;
-      case 6:
-        errMsg.value =
-          "Invalid parameters - Your request is missing a required parameter";
-        break;
-      case 7:
-        errMsg.value = "Invalid resource specified";
-        break;
-      case 8:
-        errMsg.value = "Operation failed - Something else went wrong";
-        break;
-      case 9:
-        errMsg.value = "Invalid session key - Please re-authenticate";
-        break;
-      case 10:
-        errMsg.value =
-          "Invalid API key - You must be granted a valid key by last.fm";
-        break;
-      case 11:
-        errMsg.value =
-          "Service Offline - This service is temporarily offline. Try again later.";
-        break;
-      case 13:
-        errMsg.value = "Invalid method signature supplied";
-        break;
-      case 16:
-        errMsg.value =
-          "There was a temporary error processing your request. Please try again";
-        break;
-      case 26:
-        errMsg.value =
-          "Suspended API key - Access for your account has been suspended, please contact Last.fm";
-        break;
-      case 29:
-        errMsg.value =
-          "Rate limit exceeded - Your IP has made too many requests in a short period";
-        break;
-    }
   }
 };
 
@@ -303,43 +125,6 @@ const btnState = () => {
     btn.removeAttribute("disabled");
     loading.value = false;
   }
-};
-
-const getColors = async () => {
-  let p = 10000;
-  let d = 0.2;
-  let s = 0.2;
-  let l = 0;
-  let h = 0.083;
-  colors = await extractColors(number1[0].image["#text"], {
-    pixels: p,
-    distance: d,
-    saturationDistance: s,
-    lightnessDistance: l,
-    hueDistance: h,
-  });
-
-  while (colors.length < 8) {
-    d -= 0.01;
-    colors = await extractColors(number1[0].image["#text"], {
-      pixels: p,
-      distance: d,
-      saturationDistance: s,
-      lightnessDistance: l,
-      hueDistance: h,
-    });
-  }
-  while (colors.length > 10) {
-    d += 0.01;
-    colors = await extractColors(number1[0].image["#text"], {
-      pixels: p,
-      distance: d,
-      saturationDistance: s,
-      lightnessDistance: l,
-      hueDistance: h,
-    });
-  }
-  colors.sort((a, b) => a.lightness - b.lightness);
 };
 
 const setTimespan = () => {
@@ -408,14 +193,12 @@ const clear = () => {
   timespan.value = "";
   g.value = "";
   errMsg.value = "";
-
-  tracks = [];
+  tracks = {};
   artists = [];
   albums = [];
   number1 = [];
   grid = [];
   genres = [];
-  trackCount;
   colors = [];
 };
 
@@ -427,86 +210,16 @@ const addColors = () => {
     "linear-gradient(" + palette.primary + "," + palette.secondary + ")";
   p.style.color = palette.text;
 };
-
-const darkHex = (c, i = 0) => {
-  c.sort((a, b) => a.lightness - b.lightness);
-  return c[i].hex;
-};
-
-const lightHex = (c, i = 0) => {
-  c.sort((a, b) => b.lightness - a.lightness);
-  return c[i].hex;
-};
-
-const getPalette = (c) => {
-  let primary;
-  let secondary;
-  let text;
-  let pLightness;
-  let lightIndex = 0;
-  let darkIndex = 0;
-
-  c.forEach((i) => {
-    i.pRation = i.area * 3 + i.intensity * 2 - i.lightness;
-    if (i.lightness > 0.5) {
-      lightIndex += 1;
-    } else {
-      darkIndex += 1;
-    }
-  });
-  c.sort((a, b) => b.pRation - a.pRation);
-
-  if (
-    Math.round(c[0].lightness) !== Math.round(c[1].lightness) &&
-    c[2].pRation < -0.1
-  ) {
-    c.forEach((i) => {
-      i.pRation = i.area + i.intensity + i.lightness / 2;
-    });
-    c = c.sort((a, b) => b.pRation - a.pRation);
-  }
-
-  primary = c[0].hex;
-  secondary = c[1].hex;
-  pLightness =
-    Math.round(c[0].lightness + c[0].saturation) +
-    Math.round(c[1].lightness + c[1].saturation);
-
-  if (c.length === lightIndex) {
-    text = "#000000";
-  } else if (c.length === darkIndex) {
-    text = "#ffffff";
-  } else if (pLightness < 2.5) {
-    text = lightHex(c);
-    if (text == primary || text == secondary) {
-      console.log("first if");
-      text = darkHex(c);
-    }
-  } else {
-    text = darkHex(c);
-    if (text == primary || text == secondary) {
-      console.log("second if");
-      text = lightHex(c);
-    }
-  }
-
-  if (primary === text || secondary === text) {
-    text = secondary;
-    secondary = primary;
-  }
-  console.log(c);
-  console.log(primary, secondary, text);
-  return { primary: primary, secondary: secondary, text: text };
-};
 </script>
 
 <template>
   <div
     class="w-screen h-screen flex justify-center items-center p-2 md:p-12 overflow-hidden"
   >
-    <Canvas />
+    <!-- <Canvas /> -->
+    <Background />
     <div
-      class="w-full container md:max-w-xl max-h-full h-fit overflow-scroll outline outline-1 outline-slate-800/50 rounded-xl p-4 md:p-8 bg-slate-500/10 backdrop-blur-lg flex flex-col items-center gap-2"
+      class="w-full container md:max-w-xl max-h-full h-fit overflow-scroll outline outline-1 outline-white/20 rounded-xl p-4 md:p-8 bg-gray-700/50 backdrop-blur-3xl flex flex-col items-center gap-2"
     >
       <div class="flex flex-col mb-4">
         <div class="w-full flex justify-center items center gap-2 mb-2">
@@ -527,7 +240,7 @@ const getPalette = (c) => {
             id="username"
             autocomplete="given-name"
             placeholder="username"
-            class="block w-full rounded-lg bg-slate-700/50 px-3.5 py-2 text-base text-white focus:outline -outline-offset-2 outline-slate-300/50 placeholder:text-slate-400 focus:-outline-offset-2 focus:outline-white"
+            class="block w-full rounded-lg bg-gray-700/50 px-3.5 py-2 text-base text-white focus:outline -outline-offset-2 outline-gray-300/50 placeholder:text-gray-400 focus:-outline-offset-2 focus:outline-white"
           />
         </div>
 
@@ -538,7 +251,7 @@ const getPalette = (c) => {
             name="country"
             autocomplete="country"
             aria-label="Country"
-            class="col-start-1 row-start-1 w-full appearance-none rounded-lg py-2 pl-3.5 pr-7 text-base text-white focus:outline focus:-outline-offset-2 focus:outline-white sm:text-sm/6 bg-slate-700/50"
+            class="col-start-1 row-start-1 w-full appearance-none rounded-lg py-2 pl-3.5 pr-7 text-base text-white focus:outline focus:-outline-offset-2 focus:outline-white sm:text-sm/6 bg-gray-700/50"
           >
             <option value="7day">Weekly</option>
             <option value="1month">Monthly</option>
@@ -548,7 +261,7 @@ const getPalette = (c) => {
             <option value="overall">Overall</option>
           </select>
           <svg
-            class="pointer-events-none col-start-1 row-start-1 mr-2 size-5 self-center justify-self-end text-slate-700 sm:size-4"
+            class="pointer-events-none col-start-1 row-start-1 mr-2 size-5 self-center justify-self-end text-gray-700 sm:size-4"
             viewBox="0 0 16 16"
             fill="currentColor"
             aria-hidden="true"
@@ -570,7 +283,7 @@ const getPalette = (c) => {
           id="btn-generate"
           @click="handleClick(user.name, period, key)"
           type="button"
-          class="text-white w-full bg-slate-700/50 hover:bg-slate-800/50 font-semibold focus:outline focus:-outline-offset-2 focus:outline-white rounded-lg text-base leading-tight px-5 py-2.5 text-center me-2 inline-flex items-center justify-center"
+          class="text-white w-full bg-gray-700/50 hover:bg-gray-800/50 font-semibold focus:outline focus:-outline-offset-2 focus:outline-white rounded-lg text-base leading-tight px-5 py-2.5 text-center me-2 inline-flex items-center justify-center"
         >
           <svg
             v-if="loading"
@@ -594,7 +307,10 @@ const getPalette = (c) => {
         </button>
       </div>
 
-      <div id="print" class="w-3/6 flex flex-col justify-center"></div>
+      <div
+        id="print"
+        class="w-3/6 flex flex-col justify-center rounded-md overflow-hidden"
+      ></div>
       <div id="canvas" class="absolute left-[10000px] overflow-hidden">
         <div id="background" class="absolute z-10 w-[1080px] h-[1920px]"></div>
         <div id="post" class="absolute z-20 w-[1080px] h-[1920px]">
@@ -604,7 +320,7 @@ const getPalette = (c) => {
           >
             <div class="flex flex-col">
               <img
-                v-for="i in grid"
+                v-for="i in mess.grid"
                 :key="i['#text']"
                 :src="i['#text']"
                 alt=""
@@ -615,15 +331,18 @@ const getPalette = (c) => {
             <div class="flex flex-col w-[708px] h-full justify-between">
               <div class="flex flex-col gap-4">
                 <div class="flex flex-row gap-6 items-center w-full">
-                  <img class="w-[300px]" :src="number1[0].image['#text']" />
+                  <img
+                    class="w-[300px]"
+                    :src="mess.number1[0].image['#text']"
+                  />
                   <span class="text-8xl font-bold">#1</span>
                 </div>
                 <div>
                   <p class="text-4xl leading-tight truncate">
-                    {{ number1[0].artist }}
+                    {{ mess.number1[0].artist }}
                   </p>
                   <p class="text-[2.5rem] font-semibold leading-tight truncate">
-                    {{ number1[0].album }}
+                    {{ mess.number1[0].album }}
                   </p>
                 </div>
               </div>
@@ -631,7 +350,7 @@ const getPalette = (c) => {
                 <h2 class="text-[2rem] leading-tight">TOP ALBUMS</h2>
                 <ol class="list-decimal list-inside" start="2">
                   <li
-                    v-for="i in albums"
+                    v-for="i in mess.albums"
                     :key="i.album"
                     class="font-semibold text-[2.5rem] leading-tight truncate"
                   >
@@ -655,7 +374,7 @@ const getPalette = (c) => {
                 <h2 class="text-[2rem] leading-tight">TOP TRACKS</h2>
                 <ol class="list-decimal list-inside">
                   <li
-                    v-for="i in tracks"
+                    v-for="i in tracks.tracks"
                     :key="i.track"
                     class="font-semibold text-[2.5rem] leading-tight truncate"
                   >
@@ -669,13 +388,13 @@ const getPalette = (c) => {
                   <p
                     class="font-semibold text-[2.5rem] leading-tight truncate capitalize"
                   >
-                    {{ g }}
+                    {{ mess.topGenre }}
                   </p>
                 </div>
                 <div>
                   <h2 class="text-[2rem] leading-tight">TRACKS LISTENED</h2>
                   <p class="font-semibold text-[2.5rem] leading-tight">
-                    {{ trackCount }}
+                    {{ tracks.trackCount }}
                   </p>
                 </div>
               </div>
@@ -727,7 +446,7 @@ const getPalette = (c) => {
         <button
           type="button"
           @click="handleSave(genImg)"
-          class="block w-full rounded-md bg-slate-700/50 px-3.5 leading-tight py-2.5 text-center text-base font-semibold text-white shadow-sm hover:bg-slate-800/50 focus-visible:outline focus-visible:outline-1 focus-visible:outline-offset-2 focus-visible:outline-white"
+          class="block w-full rounded-md bg-gray-700/50 px-3.5 leading-tight py-2.5 text-center text-base font-semibold text-white shadow-sm hover:bg-gray-800/50 focus-visible:outline focus-visible:outline-1 focus-visible:outline-offset-2 focus-visible:outline-white"
         >
           Save
         </button>
@@ -735,7 +454,7 @@ const getPalette = (c) => {
     </div>
     <footer class="absolute bottom-1 w-full flex justify-center">
       <div
-        class="bg-slate-500/10 px-2 pb-0.5 rounded-full backdrop-blur-lg outline-slate-800/50"
+        class="bg-gray-700/50 px-2 pb-0.5 rounded-full backdrop-blur-lg outline-gray-800/50"
       >
         <a
           href="https://salguento.xyz"
