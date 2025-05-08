@@ -1,14 +1,16 @@
 <template>
-  <div
-    id="p5js"
-    class="absolute -z-10 h-screen w-screen flex justify-center items-center"
-  >
-    <img
-      :src="selectedGif"
-      alt="automatic selected gif from Giphy"
-      class="w-full h-full object-cover"
-    />
-  </div>
+  <client-only>
+    <div
+      id="p5js"
+      class="absolute -z-10 h-screen w-screen flex justify-center items-center"
+    >
+      <img
+        :src="selectedGif"
+        alt="automatic selected gif from Giphy"
+        class="w-full h-full object-cover"
+      />
+    </div>
+  </client-only>
 </template>
 
 <script setup lang="ts">
