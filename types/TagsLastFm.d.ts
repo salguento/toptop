@@ -14,3 +14,8 @@ interface Tag {
   url: string;
   length: number;
 }
+
+export interface Genre {
+  name: string;
+  playcount: string;
+}

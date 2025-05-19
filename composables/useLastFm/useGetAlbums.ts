@@ -1,7 +1,9 @@
 import { storeToRefs } from "pinia";
 import { useTopTopStore } from "@/stores/TopTopStore";
 import type { TopAlbums } from "~/types/AlbumLastFm";
+import type { Genre } from "~/types/TagsLastFm";
 import useGetTopTags from "./useGetTopTags";
+import { useGetDiscogGenres } from "../useDiscogs/useGetDiscogGenres";
 import getTopGenre from "~/utils/getTopGenre";
 
 const useGetAlbums = async (
@@ -9,14 +11,14 @@ const useGetAlbums = async (
   timeFrame: string,
   key: string
 ) => {
-  // const topTopStore = useTopTopStore();
-  // const { albums, number1, grid } = storeToRefs(topTopStore);
   const config = useRuntimeConfig();
   const apiBase = config.public.apiBase;
+
+  const { fetchAlbumGenres } = useGetDiscogGenres();
   let albums = [];
   let number1 = [];
   let grid = [];
-  let genres: string[] = [""];
+  let genres: Genre[] = [];
   let topGenre: string;
   try {
     const data: TopAlbums = await $fetch(
@@ -29,6 +31,7 @@ const useGetAlbums = async (
         key +
         "&format=json "
     );
+    // Get top 5 albuns
     for (let i = 1; i < 5; i++) {
       albums.push({
         album: data.topalbums.album[i].name,
@@ -37,9 +40,12 @@ const useGetAlbums = async (
         image: data.topalbums.album[i].image[3],
       });
     }
+    // Get the genres for all 10 albuns
     for (let i = 0; i < 9; i++) {
-      let albumGenres = await useGetTopTags(data.topalbums.album[i], key);
-      genres = genres.concat(albumGenres);
+      let x = data.topalbums.album[i];
+
+      genres = await fetchAlbumGenres(x.name, x.artist.name, x.playcount);
+
       if (i === 0) {
         number1.push({
           album: data.topalbums.album[i].name,
@@ -47,13 +53,12 @@ const useGetAlbums = async (
           count: data.topalbums.album[i].playcount,
           image: data.topalbums.album[i].image[3],
         });
-      } else if (i > 0 && i < 9) {
+      } else if (i > 0) {
         grid.push(data.topalbums.album[i].image[3]);
       }
     }
     topGenre = getTopGenre(genres);
     return { albums: albums, grid: grid, number1: number1, topGenre: topGenre };
-    // return { data };
   } catch (err) {
     console.log(err);
   }

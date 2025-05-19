@@ -51,13 +51,11 @@ const getPalette = (color: Color[]) => {
   } else if (pLightness < 2.5) {
     text = lightHex(color);
     if (text == primary || text == secondary) {
-      console.log("first if");
       text = darkHex(color);
     }
   } else {
     text = darkHex(color);
     if (text == primary || text == secondary) {
-      console.log("second if");
       text = lightHex(color);
     }
   }

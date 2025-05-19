@@ -1,12 +1,12 @@
-import type { TagsLastFm } from "~/types/TagsLastFm";
+import type { TagsLastFm, Genre } from "~/types/TagsLastFm";
 import type { Album } from "~/types/AlbumLastFm";
 import genreList from "~/static/genreDictionary.json";
 
-const useGetTopTags = async (album: Album, key: string): Promise<string[]> => {
+const useGetTopTags = async (album: Album, key: string): Promise<Genre[]> => {
   const config = useRuntimeConfig();
   const apiBase = config.public.apiBase;
 
-  let genres: string[] = [];
+  let genres: Genre[] = [];
   try {
     const data: TagsLastFm = await $fetch(
       apiBase +
@@ -20,12 +20,15 @@ const useGetTopTags = async (album: Album, key: string): Promise<string[]> => {
     );
     for (let i = 0; i < 5; i++) {
       if (genreList.genres.indexOf(data.toptags.tag[i].name) > -1) {
-        genres.push(data.toptags.tag[i].name);
+        genres.push({
+          name: data.toptags.tag[i].name,
+          playcount: album.playcount,
+        });
       }
     }
-    return genres.length > 0 ? genres : [""];
+    return genres.length > 0 ? genres : [{ name: "", playcount: "" }];
   } catch (err) {
-    return [""];
+    return [{ name: "", playcount: "" }];
   }
 };
 

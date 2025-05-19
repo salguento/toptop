@@ -5,8 +5,10 @@ export default defineNuxtConfig({
   modules: ["@nuxtjs/tailwindcss"],
   runtimeConfig: {
     public: {
-      apiKey: "", // can be overridden by NUXT_PUBLIC_API_BASE environment variable
+      apiKey: "",
       apiBase: "",
+      discogsKey: "",
+      discogsSecret: "",
     },
   },
 });
