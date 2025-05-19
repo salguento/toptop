@@ -31,6 +31,10 @@ const gifList = [
   "https://media0.giphy.com/media/v1.Y2lkPTc5MGI3NjExbXVkYnR2OWR6dGpuN3pkdWN5Zm5pbXY4MGwxaWUwZndhdjhoeHBlcCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/13N0i6WUe8c5va/giphy.gif",
   "https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExc28xa3Jma2dtdzA3NjloNmI4bWl2dTloZWprZW14MzdubWxhYzNieiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/3ornkfqNPnwvTcPU4w/giphy.gif",
   "https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExY2w4OG4wY2E1d29hb3l4cmR0YzZ5YzM1NW9kMGxzcTV3ODg4MmR0ayZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/3o6nUWf8hShRlwgSDm/giphy.gif",
+  "https://media0.giphy.com/media/v1.Y2lkPTc5MGI3NjExeHliZGxoZGJuNmtrZGJ0eGF5c3UxazkycXRlZnZkMWx4azBiNXBjNyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/KLyGK3xvTLvYA/giphy.gif",
+  "https://media0.giphy.com/media/v1.Y2lkPTc5MGI3NjExeHliZGxoZGJuNmtrZGJ0eGF5c3UxazkycXRlZnZkMWx4azBiNXBjNyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/KLyGK3xvTLvYA/giphy.gif",
+  "https://media0.giphy.com/media/v1.Y2lkPTc5MGI3NjExY2tkNHhjcWVwNm80OWdzYnk3ZHFoNDNpcjVqczVsZTZqazJyajFzMiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/3GmGIsRBq5EkV40jBe/giphy.gif",
+  "https://media0.giphy.com/media/v1.Y2lkPTc5MGI3NjExaHhqYWo2N2I1Zjhvd2t2eWdwM2JrbXkxOXRiMHFmd3RyOGNqZWdyZSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/UJE5rC7TRpd9S/giphy.gif",
 ];
 
 const selectedGif = gifList[Math.floor(Math.random() * gifList.length)];
