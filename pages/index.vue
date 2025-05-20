@@ -92,7 +92,7 @@ const handleClick = async (u, p, k) => {
     tracks = await useGetTracks(u, p, k);
     mess = await useGetAlbums(u, p, k);
     artists = await useGetArtists(u, p, k);
-    colors = await getColors(mess.number1[0].image["#text"]);
+    colors = await getColors(mess.number1[0].image);
   } catch (err) {
     return;
   }
@@ -106,7 +106,7 @@ const handleClick = async (u, p, k) => {
       load.value = true;
       setTimeout(() => addColors(), 750);
       setTimeout(() => print(), 1250);
-      setTimeout(() => (imgPrint.value = true), 5000);
+      setTimeout(() => (imgPrint.value = true), 3000);
     }
   } catch (err) {
     console.log(err);
@@ -218,6 +218,9 @@ const addColors = () => {
   >
     <!-- <Canvas /> -->
     <Background />
+    <!-- <div
+      class="w-full h-full overflow-scroll outline outline-1 outline-white/20 rounded-xl p-4 md:p-8 bg-gray-700/50 backdrop-blur-3xl flex flex-col gap-2"
+    > -->
     <div
       class="w-full container md:max-w-xl max-h-full h-fit overflow-scroll outline outline-1 outline-white/20 rounded-xl p-4 md:p-8 bg-gray-700/50 backdrop-blur-3xl flex flex-col items-center gap-2"
     >
@@ -311,42 +314,36 @@ const addColors = () => {
         id="print"
         class="w-3/6 flex flex-col justify-center rounded-md overflow-hidden"
       ></div>
+      <!-- <div id="canvas" class="overflow-hidden"> -->
       <div id="canvas" class="absolute left-[10000px] overflow-hidden">
         <div id="background" class="absolute z-10 w-[1080px] h-[1920px]"></div>
         <div id="post" class="absolute z-20 w-[1080px] h-[1920px]">
           <div
             v-if="load"
-            class="p-12 flex flex-row gap-12 h-[1920px] w-[1080px]"
+            class="p-12 flex flex-col gap-12 h-[1920px] w-[1080px]"
           >
-            <div class="flex flex-col">
-              <img
-                v-for="i in mess.grid"
-                :key="i['#text']"
-                :src="i['#text']"
-                alt=""
-                class="w-[228px] max-w-[228px]"
-              />
-            </div>
-
-            <div class="flex flex-col w-[708px] h-full justify-between">
+            <div class="flex flex-col w-full h-full justify-between">
               <div class="flex flex-col gap-4">
-                <div class="flex flex-row gap-6 items-center w-full">
+                <div
+                  class="flex flex-col gap-6 items-center justify-center w-full"
+                >
                   <img
-                    class="w-[300px]"
-                    :src="mess.number1[0].image['#text']"
+                    class="w-[512px] rounded-2xl shadow-xl"
+                    :src="mess.number1[0].image"
                   />
-                  <span class="text-8xl font-bold">#1</span>
-                </div>
-                <div>
-                  <p class="text-4xl leading-tight truncate">
-                    {{ mess.number1[0].artist }}
-                  </p>
-                  <p class="text-[2.5rem] font-semibold leading-tight truncate">
-                    {{ mess.number1[0].album }}
-                  </p>
+                  <div class="text-center">
+                    <p class="text-4xl leading-tight truncate">
+                      {{ mess.number1[0].artist }}
+                    </p>
+                    <p
+                      class="text-[2.5rem] font-semibold leading-tight truncate"
+                    >
+                      {{ mess.number1[0].album }}
+                    </p>
+                  </div>
                 </div>
               </div>
-              <div>
+              <!-- <div>
                 <h2 class="text-[2rem] leading-tight">TOP ALBUMS</h2>
                 <ol class="list-decimal list-inside" start="2">
                   <li
@@ -357,32 +354,34 @@ const addColors = () => {
                     {{ i.album }}
                   </li>
                 </ol>
+              </div> -->
+              <div class="grid grid-flow-row grid-cols-2">
+                <div class="w-full">
+                  <h2 class="text-[2rem] leading-tight">TOP ARTISTS</h2>
+                  <ol class="list-decimal list-inside">
+                    <li
+                      v-for="i in artists"
+                      :key="i.artist"
+                      class="font-semibold text-[2.5rem] leading-tight truncate"
+                    >
+                      {{ i.artist }}
+                    </li>
+                  </ol>
+                </div>
+                <div class="w-full">
+                  <h2 class="text-[2rem] leading-tight">TOP TRACKS</h2>
+                  <ol class="list-decimal list-inside">
+                    <li
+                      v-for="i in tracks.tracks"
+                      :key="i.track"
+                      class="font-semibold text-[2.5rem] leading-tight truncate"
+                    >
+                      {{ i.track }}
+                    </li>
+                  </ol>
+                </div>
               </div>
-              <div>
-                <h2 class="text-[2rem] leading-tight">TOP ARTISTS</h2>
-                <ol class="list-decimal list-inside">
-                  <li
-                    v-for="i in artists"
-                    :key="i.artist"
-                    class="font-semibold text-[2.5rem] leading-tight truncate"
-                  >
-                    {{ i.artist }}
-                  </li>
-                </ol>
-              </div>
-              <div>
-                <h2 class="text-[2rem] leading-tight">TOP TRACKS</h2>
-                <ol class="list-decimal list-inside">
-                  <li
-                    v-for="i in tracks.tracks"
-                    :key="i.track"
-                    class="font-semibold text-[2.5rem] leading-tight truncate"
-                  >
-                    {{ i.track }}
-                  </li>
-                </ol>
-              </div>
-              <div class="flex flex-row justify-between">
+              <div class="grid grid-flow-row grid-cols-2 justify-between">
                 <div>
                   <h2 class="text-[2rem] leading-tight">TOP GENRE</h2>
                   <p
@@ -397,6 +396,17 @@ const addColors = () => {
                     {{ tracks.trackCount }}
                   </p>
                 </div>
+              </div>
+              <div
+                class="grid grid-flow-row grid-cols-4 overflow-hidden rounded-2xl shadow-xl"
+              >
+                <img
+                  v-for="i in mess.grid"
+                  :key="i['#text']"
+                  :src="i['#text']"
+                  alt=""
+                  class="max-w-[246px]"
+                />
               </div>
               <div class="flex flex-row justify-between h-fit">
                 <div class="flex flex-row items-center gap-4">

@@ -51,7 +51,7 @@ const useGetAlbums = async (
           album: data.topalbums.album[i].name,
           artist: data.topalbums.album[i].artist.name,
           count: data.topalbums.album[i].playcount,
-          image: data.topalbums.album[i].image[3],
+          image: data.topalbums.album[i].image[3]["#text"],
         });
       } else if (i > 0) {
         grid.push(data.topalbums.album[i].image[3]);
