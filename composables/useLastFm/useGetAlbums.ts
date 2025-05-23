@@ -49,8 +49,7 @@ const useGetAlbums = async (
         x.artist.name,
         x.playcount
       );
-      console.log(x.name);
-      console.log(genres);
+
       if (i === 0) {
         number1.push({
           album: data.topalbums.album[i].name,
