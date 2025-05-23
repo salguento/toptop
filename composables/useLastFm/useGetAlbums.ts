@@ -44,8 +44,13 @@ const useGetAlbums = async (
     for (let i = 0; i < 9; i++) {
       let x = data.topalbums.album[i];
 
-      genres = await fetchAlbumGenres(x.name, x.artist.name, x.playcount);
-
+      genres = await fetchAlbumGenres(
+        x.name.replace(/\([^)]*\)/g, ""),
+        x.artist.name,
+        x.playcount
+      );
+      console.log(x.name);
+      console.log(genres);
       if (i === 0) {
         number1.push({
           album: data.topalbums.album[i].name,
@@ -57,6 +62,7 @@ const useGetAlbums = async (
         grid.push(data.topalbums.album[i].image[3]);
       }
     }
+
     topGenre = getTopGenre(genres);
     return { albums: albums, grid: grid, number1: number1, topGenre: topGenre };
   } catch (err) {

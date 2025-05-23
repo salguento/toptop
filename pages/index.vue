@@ -224,15 +224,14 @@ const addColors = () => {
     <div
       class="w-full container md:max-w-xl max-h-full h-fit overflow-scroll outline outline-1 outline-white/20 rounded-xl p-4 md:p-8 bg-gray-700/50 backdrop-blur-3xl flex flex-col items-center gap-2"
     >
-      <div class="flex flex-col mb-4">
-        <div class="w-full flex justify-center items center gap-2 mb-2">
+      <div class="flex flex-col mb-4 text-center">
+        <div class="w-full flex justify-center items center gap-2 pt-2">
           <img class="h-10" src="/toptop.svg" />
           <h1 class="text-white text-3xl font-bold leading-none pt-1">
             toptop
           </h1>
         </div>
-        <p class="text-white/75 text-center">Spotlight your tops</p>
-        <p class="text-white/50 text-center text-xs">Powered by Last.fm</p>
+        <!-- <p class="text-white/75 text-center">Spotlight your tops</p> -->
       </div>
       <div class="flex flex-row gap-2 w-full">
         <div class="w-full">
@@ -242,7 +241,7 @@ const addColors = () => {
             name="username"
             id="username"
             autocomplete="given-name"
-            placeholder="username"
+            placeholder="Last.fm user"
             class="block w-full rounded-lg bg-gray-700/50 px-3.5 py-2 text-base text-white focus:outline -outline-offset-2 outline-gray-300/50 placeholder:text-gray-400 focus:-outline-offset-2 focus:outline-white"
           />
         </div>
@@ -309,10 +308,9 @@ const addColors = () => {
           {{ loading ? "Loading" : "Generate" }}
         </button>
       </div>
-
       <div
         id="print"
-        class="w-3/6 flex flex-col justify-center rounded-md overflow-hidden"
+        class="w-full md:w-3/6 flex flex-col justify-center rounded-md overflow-hidden"
       ></div>
       <!-- <div id="canvas" class="overflow-hidden"> -->
       <div id="canvas" class="absolute left-[10000px] overflow-hidden">
@@ -461,18 +459,14 @@ const addColors = () => {
           Save
         </button>
       </div>
-    </div>
-    <footer class="absolute bottom-1 w-full flex justify-center">
-      <div
-        class="bg-gray-700/50 px-2 pb-0.5 rounded-full backdrop-blur-lg outline-gray-800/50"
-      >
+      <footer class="h-4 w-full text-center pt-2">
         <a
           href="https://salguento.xyz"
-          class="text-white/80 w-full text-xs leading-none"
-          >salguento 👾 {{ year }}
+          class="text-white w-full text-xs leading-none"
+          >Salguento 👾 {{ year }}
         </a>
-      </div>
-    </footer>
+      </footer>
+    </div>
   </div>
 </template>
 
