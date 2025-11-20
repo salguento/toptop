@@ -5,8 +5,8 @@ const getPalette = (color: Color[]) => {
   let secondary;
   let text;
   let pLightness;
-  let lightIndex = 0;
-  let darkIndex = 0;
+  let lightIndex,
+    darkIndex = 0;
 
   const darkHex = (color: Color[]) => {
     color.sort((a, b) => a.lightness - b.lightness);
@@ -19,7 +19,7 @@ const getPalette = (color: Color[]) => {
   };
 
   color.forEach((i) => {
-    i.pRation = i.area * 3 + i.intensity * 2 - i.lightness;
+    i.pRation = i.area * 3 + i.intensity * 4 - i.lightness;
     if (i.lightness > 0.5) {
       lightIndex += 1;
     } else {
@@ -40,30 +40,20 @@ const getPalette = (color: Color[]) => {
 
   primary = color[0].hex;
   secondary = color[1].hex;
-  pLightness =
-    Math.round(color[0].lightness + color[0].saturation) +
-    Math.round(color[1].lightness + color[1].saturation);
+  pLightness = color[0].lightness + color[1].lightness;
 
-  if (color.length === lightIndex) {
+  if (pLightness > 1) {
     text = "#000000";
-  } else if (color.length === darkIndex) {
-    text = "#ffffff";
-  } else if (pLightness < 2.5) {
-    text = lightHex(color);
-    if (text == primary || text == secondary) {
-      text = darkHex(color);
-    }
   } else {
-    text = darkHex(color);
-    if (text == primary || text == secondary) {
-      text = lightHex(color);
-    }
+    text = "#ffffff";
   }
 
   if (primary === text || secondary === text) {
     text = secondary;
     secondary = primary;
   }
+
+  console.log(pLightness);
   return { primary: primary, secondary: secondary, text: text };
 };
 
