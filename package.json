@@ -19,8 +19,5 @@
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare"
   },
-  "type": "module",
-  "engines": {
-    "node": "20.x"
-  }
+  "type": "module"
 }
