@@ -1,14 +1,5 @@
 {
   "name": "nuxt-app",
-  "private": true,
-  "type": "module",
-  "scripts": {
-    "build": "nuxt build",
-    "dev": "nuxt dev",
-    "generate": "nuxt generate",
-    "preview": "nuxt preview",
-    "postinstall": "nuxt prepare"
-  },
   "dependencies": {
     "@nuxtjs/tailwindcss": "6.12.2",
     "dom-to-image-more": "^3.5.0",
@@ -20,7 +11,13 @@
     "vue": "latest",
     "vue-router": "latest"
   },
-  "devDependencies": {
-    "@types/p5": "^1.7.6"
-  }
+  "private": true,
+  "scripts": {
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare"
+  },
+  "type": "module"
 }
