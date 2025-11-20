@@ -9,7 +9,7 @@ import getTopGenre from "~/utils/getTopGenre";
 const useGetAlbums = async (
   userName: string,
   timeFrame: string,
-  key: string
+  key: string,
 ) => {
   const config = useRuntimeConfig();
   const apiBase = config.public.apiBase;
@@ -29,7 +29,7 @@ const useGetAlbums = async (
         timeFrame +
         "&api_key=" +
         key +
-        "&format=json "
+        "&format=json ",
     );
     // Get top 5 albuns
     for (let i = 1; i < 5; i++) {
@@ -41,13 +41,13 @@ const useGetAlbums = async (
       });
     }
     // Get the genres for all 10 albuns
-    for (let i = 0; i < 9; i++) {
+    for (let i = 0; i < 13; i++) {
       let x = data.topalbums.album[i];
 
       genres = await fetchAlbumGenres(
         x.name.replace(/\([^)]*\)/g, ""),
         x.artist.name,
-        x.playcount
+        x.playcount,
       );
 
       if (i === 0) {

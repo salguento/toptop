@@ -332,105 +332,7 @@ onMounted(async () => {
                         <div
                             class="flex flex-col w-full h-full justify-between"
                         >
-                            <div class="flex flex-col gap-4">
-                                <div
-                                    class="flex flex-col gap-6 items-center justify-center w-full"
-                                >
-                                    <img
-                                        class="w-[512px] rounded-2xl shadow-xl"
-                                        :src="mess.number1[0].image"
-                                    />
-                                    <div class="text-center w-full">
-                                        <p
-                                            class="text-[2.5rem] font-semibold leading-tight truncate"
-                                        >
-                                            {{ mess.number1[0].album }}
-                                        </p>
-                                        <p
-                                            class="text-4xl leading-tight truncate"
-                                        >
-                                            {{ mess.number1[0].artist }}
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                            <!-- <div>
-                <h2 class="text-[2rem] leading-tight">TOP ALBUMS</h2>
-                <ol class="list-decimal list-inside" start="2">
-                  <li
-                    v-for="i in mess.albums"
-                    :key="i.album"
-                    class="font-semibold text-[2.5rem] leading-tight truncate"
-                  >
-                    {{ i.album }}
-                  </li>
-                </ol>
-              </div> -->
-                            <div class="grid grid-flow-row grid-cols-2">
-                                <div class="w-full">
-                                    <h2 class="text-[2rem] leading-tight">
-                                        TOP ARTISTS
-                                    </h2>
-                                    <ol class="list-decimal list-inside">
-                                        <li
-                                            v-for="i in artists"
-                                            :key="i.artist"
-                                            class="font-semibold text-[2.5rem] leading-tight truncate"
-                                        >
-                                            {{ i.artist }}
-                                        </li>
-                                    </ol>
-                                </div>
-                                <div class="w-full">
-                                    <h2 class="text-[2rem] leading-tight">
-                                        TOP TRACKS
-                                    </h2>
-                                    <ol class="list-decimal list-inside">
-                                        <li
-                                            v-for="i in tracks.tracks"
-                                            :key="i.track"
-                                            class="font-semibold text-[2.5rem] leading-tight truncate"
-                                        >
-                                            {{ i.track }}
-                                        </li>
-                                    </ol>
-                                </div>
-                            </div>
-                            <div
-                                class="grid grid-flow-row grid-cols-2 justify-between"
-                            >
-                                <div>
-                                    <h2 class="text-[2rem] leading-tight">
-                                        TOP GENRE
-                                    </h2>
-                                    <p
-                                        class="font-semibold text-[2.5rem] leading-tight truncate capitalize w-full pr-8"
-                                    >
-                                        {{ mess.topGenre }}
-                                    </p>
-                                </div>
-                                <div>
-                                    <h2 class="text-[2rem] leading-tight">
-                                        TRACKS LISTENED
-                                    </h2>
-                                    <p
-                                        class="font-semibold text-[2.5rem] leading-tight"
-                                    >
-                                        {{ tracks.trackCount }}
-                                    </p>
-                                </div>
-                            </div>
-                            <div
-                                class="grid grid-flow-row grid-cols-4 overflow-hidden rounded-2xl shadow-xl"
-                            >
-                                <img
-                                    v-for="i in mess.grid"
-                                    :key="i['#text']"
-                                    :src="i['#text']"
-                                    alt=""
-                                    class="max-w-[246px]"
-                                />
-                            </div>
+                            <!-- HEADER -->
                             <div class="flex flex-row justify-between h-fit">
                                 <div class="flex flex-row items-center gap-4">
                                     <img
@@ -479,6 +381,105 @@ onMounted(async () => {
                                             fullDate
                                         }}</span>
                                     </div>
+                                </div>
+                            </div>
+                            <div class="flex flex-col gap-4">
+                                <div
+                                    class="flex flex-col gap-6 items-center justify-center w-full"
+                                >
+                                    <div
+                                        class="grid grid-cols-4 overflow-hidden rounded-2xl shadow-xl"
+                                    >
+                                        <img
+                                            v-for="i in mess.grid"
+                                            :key="i['#text']"
+                                            :src="i['#text']"
+                                            alt=""
+                                            class="max-w-[246px]"
+                                        />
+                                        <img
+                                            class="w-[512px] shadow-xl col-span-2 col-start-2 row-start-2 row-span-2"
+                                            :src="mess.number1[0].image"
+                                        />
+                                    </div>
+                                    <div class="text-center w-full">
+                                        <p
+                                            class="text-[2.5rem] font-semibold leading-tight truncate"
+                                        >
+                                            {{ mess.number1[0].album }}
+                                        </p>
+                                        <p
+                                            class="text-4xl leading-tight truncate"
+                                        >
+                                            {{ mess.number1[0].artist }}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- <div>
+                <h2 class="text-[2rem] leading-tight">TOP ALBUMS</h2>
+                <ol class="list-decimal list-inside" start="2">
+                  <li
+                    v-for="i in mess.albums"
+                    :key="i.album"
+                    class="font-semibold text-[2.5rem] leading-tight truncate"
+                  >
+                    {{ i.album }}
+                  </li>
+                </ol>
+              </div> -->
+                            <div class="grid grid-flow-row grid-cols-2 gap-8">
+                                <div class="w-full">
+                                    <h2 class="text-[2rem] leading-tight">
+                                        TOP ARTISTS
+                                    </h2>
+                                    <ol class="list-decimal list-inside">
+                                        <li
+                                            v-for="i in artists"
+                                            :key="i.artist"
+                                            class="font-semibold text-[2.5rem] leading-tight truncate"
+                                        >
+                                            {{ i.artist }}
+                                        </li>
+                                    </ol>
+                                </div>
+                                <div class="w-full">
+                                    <h2 class="text-[2rem] leading-tight">
+                                        TOP TRACKS
+                                    </h2>
+                                    <ol class="list-decimal list-inside">
+                                        <li
+                                            v-for="i in tracks.tracks"
+                                            :key="i.track"
+                                            class="font-semibold text-[2.5rem] leading-tight truncate"
+                                        >
+                                            {{ i.track }}
+                                        </li>
+                                    </ol>
+                                </div>
+                            </div>
+                            <div
+                                class="grid grid-flow-row grid-cols-2 justify-between"
+                            >
+                                <div>
+                                    <h2 class="text-[2rem] leading-tight">
+                                        TOP GENRE
+                                    </h2>
+                                    <p
+                                        class="font-semibold text-[2.5rem] leading-tight truncate capitalize w-full pr-8"
+                                    >
+                                        {{ mess.topGenre }}
+                                    </p>
+                                </div>
+                                <div class="pb-8">
+                                    <h2 class="text-[2rem] leading-tight">
+                                        TRACKS LISTENED
+                                    </h2>
+                                    <p
+                                        class="font-semibold text-[2.5rem] leading-tight"
+                                    >
+                                        {{ tracks.trackCount }}
+                                    </p>
                                 </div>
                             </div>
                         </div>
