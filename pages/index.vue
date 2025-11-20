@@ -46,6 +46,8 @@ const config = useRuntimeConfig();
 const apiRoot = config.public.apiBase;
 const key = config.public.apiKey;
 
+let domtoimage = null;
+
 // const topTopStore = useTopTopStore();
 // const { albums, number1, grid, genres, colors, user, tracks, artists } =
 //   storeToRefs(topTopStore);
@@ -150,8 +152,9 @@ const setTimespan = () => {
     }
 };
 
-const print = () => {
-    domtoimage
+const print = async () => {
+    let node = document.getElementById("canvas");
+    await domtoimage
         .toPng(node, { copyDefaultStyles: false, height: 1920, width: 1080 })
         .then(function (dataUrl) {
             let img = new Image();
@@ -212,7 +215,6 @@ const addColors = () => {
 onMounted(async () => {
     // Import only on client-side
     domtoimage = await import("dom-to-image-more");
-    let node = document.getElementById("canvas");
 });
 </script>
 
