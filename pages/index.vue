@@ -1,7 +1,7 @@
 <script setup>
 import { storeToRefs } from "pinia";
 import { extractColors } from "extract-colors";
-import domtoimage from "dom-to-image-more";
+// import domtoimage from "dom-to-image-more";
 // Dictionary
 import genreList from "~/static/genreDictionary.json";
 // Store
@@ -151,13 +151,11 @@ const setTimespan = () => {
 };
 
 const print = () => {
-    let node = document.getElementById("canvas");
     domtoimage
         .toPng(node, { copyDefaultStyles: false, height: 1920, width: 1080 })
         .then(function (dataUrl) {
             let img = new Image();
             img.src = dataUrl;
-            genImg.value = dataUrl;
             document.getElementById("print").appendChild(img);
         })
         .catch(function (error) {
@@ -210,6 +208,12 @@ const addColors = () => {
         "linear-gradient(" + palette.primary + "," + palette.secondary + ")";
     p.style.color = palette.text;
 };
+
+onMounted(async () => {
+    // Import only on client-side
+    domtoimage = await import("dom-to-image-more");
+    let node = document.getElementById("canvas");
+});
 </script>
 
 <template>

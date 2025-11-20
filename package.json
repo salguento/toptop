@@ -2,12 +2,12 @@
   "name": "nuxt-app",
   "dependencies": {
     "@nuxtjs/tailwindcss": "6.12.2",
-    "dom-to-image-more": "^3.5.0",
+    "dom-to-image-more": "^3.7.2",
     "extract-colors": "^4.2.1",
-    "nuxt": "^3.14.1592",
+    "nuxt": "^3.20.1",
     "nuxt-app": ".",
-    "p5": "^1.11.2",
-    "pinia": "^3.0.2",
+    "p5": "^1.11.11",
+    "pinia": "^3.0.4",
     "vue": "latest",
     "vue-router": "latest"
   },

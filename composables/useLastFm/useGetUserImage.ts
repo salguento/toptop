@@ -1,7 +1,6 @@
 import type { UserInfo } from "~/types/UserLastFm";
 
 import LastFmErrorCheck from "~/utils/LastFmErrorCheck";
-import LastFmBaseURL from "~/utils/LastFmBaseURL";
 const useGetUserImage = async (userName: string, key: string) => {
   const config = useRuntimeConfig();
   const apiBaseURL = config.public.apiBase;
@@ -13,7 +12,7 @@ const useGetUserImage = async (userName: string, key: string) => {
         userName +
         "&api_key=" +
         key +
-        "&format=json "
+        "&format=json ",
     );
     return data.user.image[1]?.["#text"];
   } catch (err: any) {
