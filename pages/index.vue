@@ -231,7 +231,9 @@ onMounted(async () => {
             class="w-full container md:max-w-xl max-h-full h-fit overflow-scroll outline outline-1 outline-white/20 rounded-xl p-4 md:p-8 bg-gray-700/50 backdrop-blur-3xl flex flex-col items-center gap-4 md:gap-8"
         >
             <div class="flex flex-col text-center">
-                <div class="w-full flex justify-center items-center gap-2">
+                <div
+                    class="w-full flex justify-center items-center md:gap-2 gap-1"
+                >
                     <img class="h-6 md:h-10" src="/toptop.svg" />
                     <h1
                         class="text-white text-xl md:text-3xl font-bold leading-none"
