@@ -81,6 +81,7 @@ let grid = [];
 let genres = [];
 let colors = [];
 let mess = {};
+let imgUrl = "";
 
 const handleClick = async (u, p, k) => {
     clear();
@@ -160,6 +161,7 @@ const print = async () => {
             let img = new Image();
             img.src = dataUrl;
             document.getElementById("print").appendChild(img);
+            imgUrl = dataUrl;
         })
         .catch(function (error) {
             console.error("oops, something went wrong!", error);
@@ -212,6 +214,37 @@ const addColors = () => {
     p.style.color = palette.text;
 };
 
+const copyImageFromUrl = async (imageUrl) => {
+    try {
+        if (!navigator.clipboard) {
+            throw new Error("Clipboard API not supported");
+        }
+
+        const response = await fetch(imageUrl);
+        const blob = await response.blob();
+
+        const clipboardItem = new ClipboardItem({
+            [blob.type]: blob,
+        });
+
+        await navigator.clipboard.write([clipboardItem]);
+        snack("Copied :3");
+        return true;
+    } catch (error) {
+        snack("Error copying image");
+        return false;
+    }
+};
+
+const snack = (message) => {
+    const snack = document.getElementById("snack");
+    snack.textContent = message;
+    snack.classList.remove("hidden");
+    setTimeout(() => {
+        snack.classList.add("hidden");
+    }, 1000);
+};
+
 onMounted(async () => {
     // Import only on client-side
     domtoimage = await import("dom-to-image-more");
@@ -228,7 +261,7 @@ onMounted(async () => {
       class="w-full h-full overflow-scroll outline outline-1 outline-white/20 rounded-xl p-4 md:p-8 bg-gray-700/50 backdrop-blur-3xl flex flex-col gap-2"
     > -->
         <div
-            class="w-full container md:max-w-xl max-h-full h-fit overflow-scroll outline outline-1 outline-white/20 rounded-xl p-4 md:p-8 bg-gray-700/50 backdrop-blur-3xl flex flex-col items-center gap-4 md:gap-8"
+            class="w-full container max-w-lg max-h-full h-fit overflow-scroll outline outline-1 outline-white/20 rounded-xl p-4 md:p-8 bg-gray-700/50 backdrop-blur-3xl flex flex-col items-center gap-4 md:gap-8"
         >
             <div class="flex flex-col text-center">
                 <div
@@ -436,7 +469,7 @@ onMounted(async () => {
               </div> -->
                             <div class="grid grid-flow-row grid-cols-2 gap-8">
                                 <div class="w-full">
-                                    <h2 class="text-[2rem] leading-tight">
+                                    <h2 class="text-[1.5rem] leading-tight">
                                         TOP ARTISTS
                                     </h2>
                                     <ol class="list-decimal list-inside">
@@ -450,7 +483,7 @@ onMounted(async () => {
                                     </ol>
                                 </div>
                                 <div class="w-full">
-                                    <h2 class="text-[2rem] leading-tight">
+                                    <h2 class="text-[1.5rem] leading-tight">
                                         TOP TRACKS
                                     </h2>
                                     <ol class="list-decimal list-inside">
@@ -468,7 +501,7 @@ onMounted(async () => {
                                 class="grid grid-flow-row grid-cols-2 justify-between gap-8"
                             >
                                 <div>
-                                    <h2 class="text-[2rem] leading-tight">
+                                    <h2 class="text-[1.5rem] leading-tight">
                                         TOP GENRE
                                     </h2>
                                     <p
@@ -477,9 +510,29 @@ onMounted(async () => {
                                         {{ mess.topGenre }}
                                     </p>
                                 </div>
-                                <div class="pb-8">
-                                    <h2 class="text-[2rem] leading-tight">
-                                        TRACKS LISTENED
+                                <div>
+                                    <h2 class="text-[1.5rem] leading-tight">
+                                        TOTAL TRACKS
+                                    </h2>
+                                    <p
+                                        class="font-semibold text-[2.5rem] leading-tight"
+                                    >
+                                        {{ tracks.trackCount }}
+                                    </p>
+                                </div>
+                                <div>
+                                    <h2 class="text-[1.5rem] leading-tight">
+                                        TOTAL ARTISTS
+                                    </h2>
+                                    <p
+                                        class="font-semibold text-[2.5rem] leading-tight"
+                                    >
+                                        {{ tracks.trackCount }}
+                                    </p>
+                                </div>
+                                <div>
+                                    <h2 class="text-[1.5rem] leading-tight">
+                                        TOTAL ALBUMS
                                     </h2>
                                     <p
                                         class="font-semibold text-[2.5rem] leading-tight"
@@ -492,14 +545,45 @@ onMounted(async () => {
                     </div>
                 </div>
             </div>
-            <div v-if="load" class="w-full">
+            <div v-if="load" class="w-full flex flex-row gap-2">
+                <button
+                    type="button"
+                    @click="clear()"
+                    class="w-full rounded-md bg-gray-700/50 px-3.5 leading-tight py-2.5 text-center text-sm font-semibold text-white shadow-sm hover:bg-gray-800/50 focus-visible:outline focus-visible:outline-1 focus-visible:outline-offset-2 focus-visible:outline-white flex flex-row items-center gap-2 justify-center"
+                    title="Return"
+                >
+                    <Icon name="i-solar:arrow-left-linear" class="h-6 w-6" />
+                    <span>Return</span>
+                </button>
                 <button
                     type="button"
                     @click="handleSave(genImg)"
-                    class="block w-full rounded-md bg-gray-700/50 px-3.5 leading-tight py-2.5 text-center text-base font-semibold text-white shadow-sm hover:bg-gray-800/50 focus-visible:outline focus-visible:outline-1 focus-visible:outline-offset-2 focus-visible:outline-white"
+                    class="w-full rounded-md bg-gray-700/50 px-3.5 leading-tight py-2.5 text-center text-sm font-semibold text-white shadow-sm hover:bg-gray-800/50 focus-visible:outline focus-visible:outline-1 focus-visible:outline-offset-2 focus-visible:outline-white flex flex-row items-center gap-2 justify-center"
+                    title="Save"
                 >
-                    Save
+                    <Icon
+                        name="i-solar:gallery-download-linear"
+                        class="h-6 w-6"
+                    />
+                    <span>Save</span>
                 </button>
+                <div class="w-full relative place-items-center grid">
+                    <button
+                        type="button"
+                        @click="copyImageFromUrl(imgUrl)"
+                        class="w-full rounded-md bg-gray-700/50 px-3.5 leading-tight py-2.5 text-center text-sm font-semibold text-white shadow-sm hover:bg-gray-800/50 focus-visible:outline focus-visible:outline-1 focus-visible:outline-offset-2 focus-visible:outline-white flex flex-row items-center gap-2 justify-center"
+                        title="Copy to clipboard"
+                    >
+                        <Icon name="i-solar:copy-outline" class="h-6 w-6" />
+                        <span>Copy</span>
+                    </button>
+                    <span
+                        id="snack"
+                        class="absolute hidden -top-10 z-100 px-3 py-2 text-xs font-medium text-white bg-gray-950/50 rounded-full shadow-xs"
+                    >
+                        Copied ;)
+                    </span>
+                </div>
             </div>
             <footer class="h-4 w-full text-center pb-4">
                 <a
