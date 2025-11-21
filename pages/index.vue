@@ -228,7 +228,7 @@ onMounted(async () => {
       class="w-full h-full overflow-scroll outline outline-1 outline-white/20 rounded-xl p-4 md:p-8 bg-gray-700/50 backdrop-blur-3xl flex flex-col gap-2"
     > -->
         <div
-            class="w-full container md:max-w-xl max-h-full h-fit overflow-scroll outline outline-1 outline-white/20 rounded-xl p-4 md:p-8 bg-gray-700/50 backdrop-blur-3xl flex flex-col items-center gap-2"
+            class="w-full container md:max-w-xl max-h-full h-fit overflow-scroll outline outline-1 outline-white/20 rounded-xl p-8 bg-gray-700/50 backdrop-blur-3xl flex flex-col items-center gap-2"
         >
             <div class="flex flex-col mb-4 text-center">
                 <div class="w-full flex justify-center items center gap-2 pt-2">
@@ -459,7 +459,7 @@ onMounted(async () => {
                                 </div>
                             </div>
                             <div
-                                class="grid grid-flow-row grid-cols-2 justify-between"
+                                class="grid grid-flow-row grid-cols-2 justify-between gap-8"
                             >
                                 <div>
                                     <h2 class="text-[2rem] leading-tight">
