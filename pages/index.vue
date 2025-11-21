@@ -228,96 +228,100 @@ onMounted(async () => {
       class="w-full h-full overflow-scroll outline outline-1 outline-white/20 rounded-xl p-4 md:p-8 bg-gray-700/50 backdrop-blur-3xl flex flex-col gap-2"
     > -->
         <div
-            class="w-full container md:max-w-xl max-h-full h-fit overflow-scroll outline outline-1 outline-white/20 rounded-xl p-8 bg-gray-700/50 backdrop-blur-3xl flex flex-col items-center gap-2"
+            class="w-full container md:max-w-xl max-h-full h-fit overflow-scroll outline outline-1 outline-white/20 rounded-xl p-4 md:p-8 bg-gray-700/50 backdrop-blur-3xl flex flex-col items-center gap-4 md:gap-8"
         >
-            <div class="flex flex-col mb-4 text-center">
-                <div class="w-full flex justify-center items center gap-2 pt-2">
-                    <img class="h-10" src="/toptop.svg" />
-                    <h1 class="text-white text-3xl font-bold leading-none pt-1">
+            <div class="flex flex-col text-center">
+                <div class="w-full flex justify-center items-center gap-2">
+                    <img class="h-6 md:h-10" src="/toptop.svg" />
+                    <h1
+                        class="text-white text-xl md:text-3xl font-bold leading-none"
+                    >
                         toptop
                     </h1>
                 </div>
                 <!-- <p class="text-white/75 text-center">Spotlight your tops</p> -->
             </div>
-            <div class="flex flex-row gap-2 w-full">
-                <div class="w-full">
-                    <input
-                        v-model="user.name"
-                        type="text"
-                        name="username"
-                        id="username"
-                        autocomplete="given-name"
-                        placeholder="Last.fm user"
-                        class="block w-full rounded-lg bg-gray-700/50 px-3.5 py-2 text-base text-white focus:outline -outline-offset-2 outline-gray-300/50 placeholder:text-gray-400 focus:-outline-offset-2 focus:outline-white"
-                    />
-                </div>
+            <div v-if="!load" class="flex flex-col gap-2 w-full relative">
+                <div class="flex flex-row gap-2 w-full">
+                    <div class="w-full">
+                        <input
+                            v-model="user.name"
+                            type="text"
+                            name="username"
+                            id="username"
+                            autocomplete="given-name"
+                            placeholder="Last.fm user"
+                            class="block w-full rounded-lg bg-gray-700/50 px-3.5 py-2 text-base text-white focus:outline -outline-offset-2 outline-gray-300/50 placeholder:text-gray-400 focus:-outline-offset-2 focus:outline-white"
+                        />
+                    </div>
 
-                <div class="focus-within:relative grid grid-cols-1 w-full">
-                    <select
-                        v-model="period"
-                        id="country"
-                        name="country"
-                        autocomplete="country"
-                        aria-label="Country"
-                        class="col-start-1 row-start-1 w-full appearance-none rounded-lg py-2 pl-3.5 pr-7 text-base text-white focus:outline focus:-outline-offset-2 focus:outline-white sm:text-sm/6 bg-gray-700/50"
+                    <div class="focus-within:relative grid grid-cols-1 w-full">
+                        <select
+                            v-model="period"
+                            id="country"
+                            name="country"
+                            autocomplete="country"
+                            aria-label="Country"
+                            class="col-start-1 row-start-1 w-full appearance-none rounded-lg py-2 pl-3.5 pr-7 text-base text-white focus:outline focus:-outline-offset-2 focus:outline-white sm:text-sm/6 bg-gray-700/50"
+                        >
+                            <option value="7day">Weekly</option>
+                            <option value="1month">Monthly</option>
+                            <option value="3month">Quarterly</option>
+                            <option value="6month">Biannually</option>
+                            <option value="12month">Yearly</option>
+                            <option value="overall">Overall</option>
+                        </select>
+                        <svg
+                            class="pointer-events-none col-start-1 row-start-1 mr-2 size-5 self-center justify-self-end text-gray-700 sm:size-4"
+                            viewBox="0 0 16 16"
+                            fill="currentColor"
+                            aria-hidden="true"
+                            data-slot="icon"
+                        >
+                            <path
+                                fill-rule="evenodd"
+                                d="M4.22 6.22a.75.75 0 0 1 1.06 0L8 8.94l2.72-2.72a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 7.28a.75.75 0 0 1 0-1.06Z"
+                                clip-rule="evenodd"
+                            />
+                        </svg>
+                    </div>
+                </div>
+                <div v-if="errMsg" class="w-full bg-red-500/40 rounded-full">
+                    <p class="text-red-200 text-center font-medium">
+                        {{ errMsg }}
+                    </p>
+                </div>
+                <div class="w-full">
+                    <button
+                        id="btn-generate"
+                        @click="handleClick(user.name, period, key)"
+                        type="button"
+                        class="text-white w-full bg-gray-700/50 hover:bg-gray-800/50 font-semibold focus:outline focus:-outline-offset-2 focus:outline-white rounded-lg text-base leading-tight px-5 py-2.5 text-center me-2 inline-flex items-center justify-center"
                     >
-                        <option value="7day">Weekly</option>
-                        <option value="1month">Monthly</option>
-                        <option value="3month">Quarterly</option>
-                        <option value="6month">Biannually</option>
-                        <option value="12month">Yearly</option>
-                        <option value="overall">Overall</option>
-                    </select>
-                    <svg
-                        class="pointer-events-none col-start-1 row-start-1 mr-2 size-5 self-center justify-self-end text-gray-700 sm:size-4"
-                        viewBox="0 0 16 16"
-                        fill="currentColor"
-                        aria-hidden="true"
-                        data-slot="icon"
-                    >
-                        <path
-                            fill-rule="evenodd"
-                            d="M4.22 6.22a.75.75 0 0 1 1.06 0L8 8.94l2.72-2.72a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 7.28a.75.75 0 0 1 0-1.06Z"
-                            clip-rule="evenodd"
-                        />
-                    </svg>
+                        <svg
+                            v-if="loading"
+                            aria-hidden="true"
+                            role="status"
+                            class="inline w-4 h-4 me-3 text-white animate-spin"
+                            viewBox="0 0 100 101"
+                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg"
+                        >
+                            <path
+                                d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z"
+                                fill="currentColor"
+                            />
+                            <path
+                                d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z"
+                                fill="currentColor"
+                            />
+                        </svg>
+                        {{ loading ? "Loading" : "Generate" }}
+                    </button>
                 </div>
             </div>
-            <div v-if="errMsg" class="w-full bg-red-500/40 rounded-full">
-                <p class="text-red-200 text-center font-medium">{{ errMsg }}</p>
-            </div>
-            <div class="w-full">
-                <button
-                    id="btn-generate"
-                    @click="handleClick(user.name, period, key)"
-                    type="button"
-                    class="text-white w-full bg-gray-700/50 hover:bg-gray-800/50 font-semibold focus:outline focus:-outline-offset-2 focus:outline-white rounded-lg text-base leading-tight px-5 py-2.5 text-center me-2 inline-flex items-center justify-center"
-                >
-                    <svg
-                        v-if="loading"
-                        aria-hidden="true"
-                        role="status"
-                        class="inline w-4 h-4 me-3 text-white animate-spin"
-                        viewBox="0 0 100 101"
-                        fill="none"
-                        xmlns="http://www.w3.org/2000/svg"
-                    >
-                        <path
-                            d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z"
-                            fill="currentColor"
-                        />
-                        <path
-                            d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z"
-                            fill="currentColor"
-                        />
-                    </svg>
-                    {{ loading ? "Loading" : "Generate" }}
-                </button>
-            </div>
-            <div
-                id="print"
-                class="w-full md:w-3/6 flex flex-col justify-center rounded-md overflow-hidden"
-            ></div>
+
+            <div id="print" class="rounded-lg relative overflow-hidden"></div>
             <!-- <div id="canvas" class="overflow-hidden"> -->
             <div id="canvas" class="absolute left-[10000px] overflow-hidden">
                 <div
@@ -495,7 +499,7 @@ onMounted(async () => {
                     Save
                 </button>
             </div>
-            <footer class="h-4 w-full text-center pt-2">
+            <footer class="h-4 w-full text-center pb-4">
                 <a
                     href="https://salguento.xyz"
                     class="text-white w-full text-xs leading-none"
@@ -517,5 +521,9 @@ body {
 }
 .container::-webkit-scrollbar {
     display: none;
+}
+#print img {
+    display: block;
+    max-height: 100%;
 }
 </style>

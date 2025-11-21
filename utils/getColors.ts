@@ -38,7 +38,6 @@ const getColors = async (image: string) => {
     });
   }
   colors.sort((a, b) => a.lightness - b.lightness);
-  console.log(colors);
   return colors;
 };
 

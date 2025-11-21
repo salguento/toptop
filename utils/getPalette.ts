@@ -53,7 +53,6 @@ const getPalette = (color: Color[]) => {
     secondary = primary;
   }
 
-  console.log(pLightness);
   return { primary: primary, secondary: secondary, text: text };
 };
 
