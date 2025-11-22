@@ -1,10 +1,14 @@
-import useGetAccountCreationDate from "./useGetAccountCreationDate";
-
 const useGetListeningStats = async (
   username: string,
   key: string,
   timeframe: string,
 ) => {
+  if (timeframe != "Weekly" && timeframe != "Monthly")
+    return {
+      uniqueArtists: 0,
+      uniqueAlbums: 0,
+    };
+
   const baseUrl = "https://ws.audioscrobbler.com/2.0/";
   const allTracks = [];
   let page = 1;
@@ -22,24 +26,6 @@ const useGetListeningStats = async (
       break;
     case timeframe == "Monthly":
       from.setDate(now.getDate() - 30);
-      fromUnix = Math.floor(from.getTime() / 1000);
-      break;
-    case timeframe == "Quarterly":
-      from.setDate(now.getDate() - 91);
-      fromUnix = Math.floor(from.getTime() / 1000);
-      break;
-    case timeframe == "Biannually":
-      from.setDate(now.getDate() - 182);
-      fromUnix = Math.floor(from.getTime() / 1000);
-      break;
-    case timeframe == "Yearly":
-      from.setDate(now.getDate() - 365);
-      fromUnix = Math.floor(from.getTime() / 1000);
-      break;
-    case timeframe == "Overall":
-      accountCreationDate =
-        (await useGetAccountCreationDate(username, key)) || 0;
-      from.setDate(now.getDate() - accountCreationDate);
       fromUnix = Math.floor(from.getTime() / 1000);
       break;
   }
@@ -96,7 +82,6 @@ const useGetListeningStats = async (
 
       totalPages = parseInt(data.recenttracks["@attr"].totalPages) || 1;
       page++;
-
       // Rate limiting - be nice to the API
       await new Promise((resolve) => setTimeout(resolve, 200));
     }
@@ -114,10 +99,6 @@ const useGetListeningStats = async (
       }
     });
 
-    console.log({
-      uniqueArtists: uniqueArtists.size,
-      uniqueAlbums: uniqueAlbums.size,
-    });
     return {
       uniqueArtists: uniqueArtists.size,
       uniqueAlbums: uniqueAlbums.size,
