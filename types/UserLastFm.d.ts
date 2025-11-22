@@ -11,7 +11,7 @@ export interface UserInfo {
     playcount: string;
     playlists: string;
     realname: string;
-    registered: object;
+    registered: Registered;
     subscriber: string;
     trackCount: string;
     url: string;
@@ -21,4 +21,9 @@ export interface UserInfo {
 export interface UserImage {
   size: string;
   "#text": string;
+}
+
+export interface Registered {
+  "#text": string;
+  unixtime: number;
 }

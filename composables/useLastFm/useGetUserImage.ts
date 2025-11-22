@@ -17,6 +17,8 @@ const useGetUserImage = async (userName: string, key: string) => {
     return data.user.image[1]?.["#text"];
   } catch (err: any) {
     LastFmErrorCheck(err.response._data.error, userName);
+    console.error(err);
+    throw err;
   }
 };
 

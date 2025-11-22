@@ -46,13 +46,11 @@ const useGetAlbums = async (
       let x = data.topalbums.album[i];
 
       let artwork: string = x?.image[3]["#text"];
-      console.log(artwork);
       if (artwork === undefined || artwork === "") {
         artwork = await useGetArtwork(
           x?.artist.name.replace(/\([^)]*\)/g, ""),
           x?.name.replace(/\([^)]*\)/g, ""),
         );
-        console.log(artwork);
       }
 
       genres = await fetchAlbumGenres(

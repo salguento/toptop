@@ -11,6 +11,8 @@ import useGetUserImage from "~/composables/useLastFm/useGetUserImage";
 import useGetTracks from "~/composables/useLastFm/useGetUserTracks";
 import useGetAlbums from "~/composables/useLastFm/useGetAlbums";
 import useGetArtists from "~/composables/useLastFm/useGetArtists";
+import useGetListeningStats from "~/composables/useLastFm/useGetListeningStats";
+
 //Utils
 import getColors from "~/utils/getColors";
 import getPalette from "~/utils/getPalette";
@@ -82,6 +84,7 @@ let genres = [];
 let colors = [];
 let mess = {};
 let imgUrl = "";
+let stats;
 
 const handleClick = async (u, p, k) => {
     clear();
@@ -91,12 +94,13 @@ const handleClick = async (u, p, k) => {
     }
     btnState();
     try {
+        setTimespan();
         user.value.img = await useGetUserImage(u, k);
         tracks = await useGetTracks(u, p, k);
         mess = await useGetAlbums(u, p, k);
         artists = await useGetArtists(u, p, k);
         colors = await getColors(mess.number1[0].image);
-        console.log(mess);
+        stats = await useGetListeningStats(u, key, timespan.value);
     } catch (err) {
         return;
     }
@@ -106,7 +110,6 @@ const handleClick = async (u, p, k) => {
             mess.albums.length > 0 &&
             artists.length > 0
         ) {
-            setTimespan();
             load.value = true;
             setTimeout(() => addColors(), 750);
             setTimeout(() => print(), 1250);
@@ -521,24 +524,24 @@ onMounted(async () => {
                                         {{ tracks.trackCount }}
                                     </p>
                                 </div>
-                                <div>
+                                <div v-if="stats.uniqueArtists != 0">
                                     <h2 class="text-[1.5rem] leading-tight">
                                         TOTAL ARTISTS
                                     </h2>
                                     <p
                                         class="font-semibold text-[2.5rem] leading-tight"
                                     >
-                                        {{ tracks.trackCount }}
+                                        {{ stats.uniqueArtists }}
                                     </p>
                                 </div>
-                                <div>
+                                <div v-if="stats.uniqueAlbums != 0">
                                     <h2 class="text-[1.5rem] leading-tight">
                                         TOTAL ALBUMS
                                     </h2>
                                     <p
                                         class="font-semibold text-[2.5rem] leading-tight"
                                     >
-                                        {{ tracks.trackCount }}
+                                        {{ stats.uniqueAlbums }}
                                     </p>
                                 </div>
                             </div>
