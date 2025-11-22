@@ -5,6 +5,7 @@ import type { Genre } from "~/types/TagsLastFm";
 import useGetTopTags from "./useGetTopTags";
 import { useGetDiscogGenres } from "../useDiscogs/useGetDiscogGenres";
 import getTopGenre from "~/utils/getTopGenre";
+import { useGetArtwork } from "../useDeezer/useGetArtwork";
 
 const useGetAlbums = async (
   userName: string,
@@ -40,25 +41,34 @@ const useGetAlbums = async (
         image: data.topalbums.album[i].image[3],
       });
     }
-    // Get the genres for all 10 albuns
+    // Get the genres for all 10 albunst
     for (let i = 0; i < 13; i++) {
       let x = data.topalbums.album[i];
+
+      let artwork: string = x?.image[3]["#text"];
+      console.log(artwork);
+      if (artwork === undefined || artwork === "") {
+        artwork = await useGetArtwork(
+          x?.artist.name.replace(/\([^)]*\)/g, ""),
+          x?.name.replace(/\([^)]*\)/g, ""),
+        );
+        console.log(artwork);
+      }
 
       genres = await fetchAlbumGenres(
         x.name.replace(/\([^)]*\)/g, ""),
         x.artist.name,
         x.playcount,
       );
-
       if (i === 0) {
         number1.push({
           album: data.topalbums.album[i].name,
           artist: data.topalbums.album[i].artist.name,
           count: data.topalbums.album[i].playcount,
-          image: data.topalbums.album[i].image[3]["#text"],
+          image: artwork,
         });
       } else if (i > 0) {
-        grid.push(data.topalbums.album[i].image[3]);
+        grid.push(artwork);
       }
     }
 

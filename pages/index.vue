@@ -96,6 +96,7 @@ const handleClick = async (u, p, k) => {
         mess = await useGetAlbums(u, p, k);
         artists = await useGetArtists(u, p, k);
         colors = await getColors(mess.number1[0].image);
+        console.log(mess);
     } catch (err) {
         return;
     }
@@ -431,8 +432,8 @@ onMounted(async () => {
                                     >
                                         <img
                                             v-for="i in mess.grid"
-                                            :key="i['#text']"
-                                            :src="i['#text']"
+                                            :key="i"
+                                            :src="i"
                                             alt=""
                                             class="max-w-[246px]"
                                         />

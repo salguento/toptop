@@ -13,7 +13,7 @@ export const useGetDiscogGenres = () => {
   const fetchAlbumGenres = async (
     title: string,
     artist: string,
-    playcount: string
+    playcount: string,
   ): Promise<Genre[]> => {
     try {
       // console.log(title, artist);
@@ -40,7 +40,7 @@ export const useGetDiscogGenres = () => {
 
       // Get the first result's release ID
       const stylesLength = searchResults.results[0].style?.length
-        ? searchResults.results[0].style?.length
+        ? searchResults.results[0]?.style?.length
         : 0;
 
       // // Fetch release details
@@ -49,10 +49,10 @@ export const useGetDiscogGenres = () => {
       //   query: { key: DISCOGS_KEY, secret: DISCOGS_SECRET },
       // });
 
-      if (searchResults.results[0].style)
+      if (searchResults.results[0]?.style)
         for (let i = 0; i < stylesLength; i++) {
           genres.push({
-            name: searchResults.results[0].style[i],
+            name: searchResults.results[0]?.style[i],
             playcount: playcount,
           });
         }
