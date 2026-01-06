@@ -184,7 +184,7 @@ const handleSave = (downloadUrl) => {
         timespan.value.toLowerCase() +
         "-" +
         fullDate +
-        ".jpg";
+        ".png";
 
     downloadLink.click();
     downloadLink.remove();
