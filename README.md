@@ -20,6 +20,18 @@ yarn install
 bun install
 ```
 
+Configure the runtime environment:
+
+```bash
+NUXT_PUBLIC_API_BASE=https://ws.audioscrobbler.com/2.0/?
+NUXT_PUBLIC_API_KEY=your_lastfm_api_key
+NUXT_DISCOGS_KEY=your_discogs_consumer_key
+NUXT_DISCOGS_SECRET=your_discogs_consumer_secret
+```
+
+The Discogs credentials are server-only. Do not use the
+`NUXT_PUBLIC_` prefix for them.
+
 ## Development Server
 
 Start the development server on `http://localhost:3000`:

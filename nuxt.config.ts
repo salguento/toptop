@@ -4,11 +4,11 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
   modules: ["@nuxtjs/tailwindcss", "@nuxt/icon"],
   runtimeConfig: {
+    discogsKey: "",
+    discogsSecret: "",
     public: {
       apiKey: "",
       apiBase: "",
-      discogsKey: "",
-      discogsSecret: "",
     },
   },
 });
