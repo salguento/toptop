@@ -1,8 +1,5 @@
-import { storeToRefs } from "pinia";
-import { useTopTopStore } from "@/stores/TopTopStore";
 import type { TopAlbums } from "~/types/AlbumLastFm";
 import type { Genre } from "~/types/TagsLastFm";
-import useGetTopTags from "./useGetTopTags";
 import { useGetDiscogGenres } from "../useDiscogs/useGetDiscogGenres";
 import getTopGenre from "~/utils/getTopGenre";
 import { useGetArtwork } from "../useDeezer/useGetArtwork";
@@ -14,67 +11,64 @@ const useGetAlbums = async (
 ) => {
   const config = useRuntimeConfig();
   const apiBase = config.public.apiBase;
-
   const { fetchAlbumGenres } = useGetDiscogGenres();
-  let albums = [];
-  let number1 = [];
-  let grid = [];
+
+  const data: TopAlbums = await $fetch(
+    apiBase +
+      "method=user.gettopalbums&user=" +
+      userName +
+      "&period=" +
+      timeFrame +
+      "&api_key=" +
+      key +
+      "&format=json ",
+  );
+
+  const topAlbums = data.topalbums.album.slice(0, 13);
+  const albums = topAlbums.slice(1, 5).map((album) => ({
+    album: album.name,
+    artist: album.artist.name,
+    count: album.playcount,
+    image: album.image[3] ?? album.image.at(-1),
+  }));
+  const number1 = [];
+  const grid = [];
   let genres: Genre[] = [];
-  let topGenre: string;
-  try {
-    const data: TopAlbums = await $fetch(
-      apiBase +
-        "method=user.gettopalbums&user=" +
-        userName +
-        "&period=" +
-        timeFrame +
-        "&api_key=" +
-        key +
-        "&format=json ",
+
+  for (const [index, album] of topAlbums.entries()) {
+    const cleanArtist = album.artist.name.replace(/\([^)]*\)/g, "");
+    const cleanAlbum = album.name.replace(/\([^)]*\)/g, "");
+    let artwork =
+      album.image[3]?.["#text"] ?? album.image.at(-1)?.["#text"] ?? "";
+
+    if (!artwork) {
+      artwork = (await useGetArtwork(cleanArtist, cleanAlbum)) ?? "";
+    }
+
+    genres = await fetchAlbumGenres(
+      cleanAlbum,
+      album.artist.name,
+      album.playcount,
     );
-    // Get top 5 albuns
-    for (let i = 1; i < 5; i++) {
-      albums.push({
-        album: data.topalbums.album[i].name,
-        artist: data.topalbums.album[i].artist.name,
-        count: data.topalbums.album[i].playcount,
-        image: data.topalbums.album[i].image[3],
+
+    if (index === 0) {
+      number1.push({
+        album: album.name,
+        artist: album.artist.name,
+        count: album.playcount,
+        image: artwork,
       });
+    } else {
+      grid.push(artwork);
     }
-    // Get the genres for all 10 albunst
-    for (let i = 0; i < 13; i++) {
-      let x = data.topalbums.album[i];
-
-      let artwork: string = x?.image[3]["#text"];
-      if (artwork === undefined || artwork === "") {
-        artwork = await useGetArtwork(
-          x?.artist.name.replace(/\([^)]*\)/g, ""),
-          x?.name.replace(/\([^)]*\)/g, ""),
-        );
-      }
-
-      genres = await fetchAlbumGenres(
-        x.name.replace(/\([^)]*\)/g, ""),
-        x.artist.name,
-        x.playcount,
-      );
-      if (i === 0) {
-        number1.push({
-          album: data.topalbums.album[i].name,
-          artist: data.topalbums.album[i].artist.name,
-          count: data.topalbums.album[i].playcount,
-          image: artwork,
-        });
-      } else if (i > 0) {
-        grid.push(artwork);
-      }
-    }
-
-    topGenre = getTopGenre(genres);
-    return { albums: albums, grid: grid, number1: number1, topGenre: topGenre };
-  } catch (err) {
-    throw err;
   }
+
+  return {
+    albums,
+    grid,
+    number1,
+    topGenre: getTopGenre(genres),
+  };
 };
 
 export default useGetAlbums;

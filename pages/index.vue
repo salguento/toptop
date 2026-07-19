@@ -97,19 +97,24 @@ const handleClick = async (u, p, k) => {
         tracks = await useGetTracks(u, p, k);
         mess = await useGetAlbums(u, p, k);
         artists = await useGetArtists(u, p, k);
+
+        if (
+            tracks.tracks.length === 0 ||
+            mess.number1.length === 0 ||
+            artists.length === 0
+        ) {
+            errMsg.value =
+                "Not enough listening history for this period. Try a longer period.";
+            return;
+        }
+
         colors = await getColors(mess.number1[0].image);
         stats = await useGetListeningStats(u, key, timespan.value);
 
-        if (
-            tracks.tracks.length > 0 &&
-            mess.albums.length > 0 &&
-            artists.length > 0
-        ) {
-            load.value = true;
-            setTimeout(() => addColors(), 750);
-            setTimeout(() => print(), 1250);
-            setTimeout(() => (imgPrint.value = true), 3000);
-        }
+        load.value = true;
+        setTimeout(() => addColors(), 750);
+        setTimeout(() => print(), 1250);
+        setTimeout(() => (imgPrint.value = true), 3000);
     } catch (err) {
         const rawErrorCode =
             err?.response?._data?.error ?? err?.data?.error ?? err?.error;
