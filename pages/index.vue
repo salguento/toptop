@@ -93,10 +93,20 @@ const handleClick = async (u, p, k) => {
     loading.value = true;
     try {
         setTimespan();
-        user.value.img = await useGetUserImage(u, k);
-        tracks = await useGetTracks(u, p, k);
-        mess = await useGetAlbums(u, p, k);
-        artists = await useGetArtists(u, p, k);
+        const [userImage, topTracks, albumData, topArtists, listeningStats] =
+            await Promise.all([
+                useGetUserImage(u, k),
+                useGetTracks(u, p, k),
+                useGetAlbums(u, p, k),
+                useGetArtists(u, p, k),
+                useGetListeningStats(u, k, timespan.value),
+            ]);
+
+        user.value.img = userImage;
+        tracks = topTracks;
+        mess = albumData;
+        artists = topArtists;
+        stats = listeningStats;
 
         if (
             tracks.tracks.length === 0 ||
@@ -109,7 +119,6 @@ const handleClick = async (u, p, k) => {
         }
 
         colors = await getColors(mess.number1[0].image);
-        stats = await useGetListeningStats(u, key, timespan.value);
 
         load.value = true;
         setTimeout(() => addColors(), 750);

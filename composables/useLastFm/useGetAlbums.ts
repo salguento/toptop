@@ -4,6 +4,8 @@ import { useGetDiscogGenres } from "../useDiscogs/useGetDiscogGenres";
 import getTopGenre from "~/utils/getTopGenre";
 import { useGetArtwork } from "../useDeezer/useGetArtwork";
 
+const DISCOGS_CONCURRENCY = 3;
+
 const useGetAlbums = async (
   userName: string,
   timeFrame: string,
@@ -31,37 +33,51 @@ const useGetAlbums = async (
     count: album.playcount,
     image: album.image[3] ?? album.image.at(-1),
   }));
-  const number1 = [];
-  const grid = [];
-  let genres: Genre[] = [];
+  const processedAlbums: Array<{
+    album: (typeof topAlbums)[number];
+    artwork: string;
+    genres: Genre[];
+  }> = [];
 
-  for (const [index, album] of topAlbums.entries()) {
-    const cleanArtist = album.artist.name.replace(/\([^)]*\)/g, "");
-    const cleanAlbum = album.name.replace(/\([^)]*\)/g, "");
-    let artwork =
-      album.image[3]?.["#text"] ?? album.image.at(-1)?.["#text"] ?? "";
+  for (let index = 0; index < topAlbums.length; index += DISCOGS_CONCURRENCY) {
+    const batch = await Promise.all(
+      topAlbums
+        .slice(index, index + DISCOGS_CONCURRENCY)
+        .map(async (album) => {
+          const cleanArtist = album.artist.name.replace(/\([^)]*\)/g, "");
+          const cleanAlbum = album.name.replace(/\([^)]*\)/g, "");
+          let artwork =
+            album.image[3]?.["#text"] ?? album.image.at(-1)?.["#text"] ?? "";
 
-    if (!artwork) {
-      artwork = (await useGetArtwork(cleanArtist, cleanAlbum)) ?? "";
-    }
+          if (!artwork) {
+            artwork = (await useGetArtwork(cleanArtist, cleanAlbum)) ?? "";
+          }
 
-    genres = await fetchAlbumGenres(
-      cleanAlbum,
-      album.artist.name,
-      album.playcount,
+          const albumGenres = await fetchAlbumGenres(
+            cleanAlbum,
+            album.artist.name,
+            album.playcount,
+          );
+
+          return {
+            album,
+            artwork,
+            genres: albumGenres,
+          };
+        }),
     );
 
-    if (index === 0) {
-      number1.push({
-        album: album.name,
-        artist: album.artist.name,
-        count: album.playcount,
-        image: artwork,
-      });
-    } else {
-      grid.push(artwork);
-    }
+    processedAlbums.push(...batch);
   }
+
+  const number1 = processedAlbums.slice(0, 1).map(({ album, artwork }) => ({
+    album: album.name,
+    artist: album.artist.name,
+    count: album.playcount,
+    image: artwork,
+  }));
+  const grid = processedAlbums.slice(1).map(({ artwork }) => artwork);
+  const genres = processedAlbums.flatMap((album) => album.genres);
 
   return {
     albums,

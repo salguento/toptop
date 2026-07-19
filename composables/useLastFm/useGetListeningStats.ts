@@ -83,7 +83,9 @@ const useGetListeningStats = async (
       totalPages = parseInt(data.recenttracks["@attr"].totalPages) || 1;
       page++;
       // Rate limiting - be nice to the API
-      await new Promise((resolve) => setTimeout(resolve, 200));
+      if (page <= totalPages) {
+        await new Promise((resolve) => setTimeout(resolve, 200));
+      }
     }
 
     // Calculate unique artists and albums

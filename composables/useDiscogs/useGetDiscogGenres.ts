@@ -1,8 +1,6 @@
 import type { Genre } from "~/types/TagsLastFm";
 
 export const useGetDiscogGenres = () => {
-  let genres: Genre[] = [];
-
   const fetchAlbumGenres = async (
     title: string,
     artist: string,
@@ -16,17 +14,13 @@ export const useGetDiscogGenres = () => {
         },
       );
 
-      for (const style of styles) {
-        genres.push({
-          name: style,
-          playcount,
-        });
-      }
-
-      return genres.length > 0 ? genres : [{ name: "", playcount: "" }];
+      return styles.map((style) => ({
+        name: style,
+        playcount,
+      }));
     } catch (error) {
       console.error("Error fetching Discogs data:", error);
-      return [{ name: "", playcount: "" }];
+      return [];
     }
   };
 
