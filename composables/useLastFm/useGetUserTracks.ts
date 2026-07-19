@@ -29,7 +29,7 @@ const useGetTracks = async (
     }
     return { trackCount: trackCount, tracks: tracks };
   } catch (err) {
-    console.log(err);
+    throw err;
   }
 };
 

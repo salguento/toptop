@@ -1,6 +1,5 @@
 import type { UserInfo } from "~/types/UserLastFm";
 
-import LastFmErrorCheck from "~/utils/LastFmErrorCheck";
 const useGetUserImage = async (userName: string, key: string) => {
   const config = useRuntimeConfig();
   const apiBaseURL = config.public.apiBase;
@@ -15,9 +14,7 @@ const useGetUserImage = async (userName: string, key: string) => {
         "&format=json ",
     );
     return data.user.image[1]?.["#text"];
-  } catch (err: any) {
-    LastFmErrorCheck(err.response._data.error, userName);
-    console.error(err);
+  } catch (err) {
     throw err;
   }
 };

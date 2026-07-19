@@ -28,7 +28,7 @@ const useGetArtists = async (
     }
     return artists;
   } catch (err) {
-    console.log(err);
+    throw err;
   }
 };
 

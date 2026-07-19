@@ -53,12 +53,10 @@ let domtoimage = null;
 // const topTopStore = useTopTopStore();
 // const { albums, number1, grid, genres, colors, user, tracks, artists } =
 //   storeToRefs(topTopStore);
-const user = ref([
-    {
-        name: "",
-        img: "",
-    },
-]);
+const user = ref({
+    name: "",
+    img: "",
+});
 const period = ref("7day");
 const load = ref(false);
 const loading = ref(false);
@@ -88,11 +86,12 @@ let stats;
 
 const handleClick = async (u, p, k) => {
     clear();
-    errMsg.value = LastFmErrorCheck(user.value.name);
+    errMsg.value = LastFmErrorCheck(0, user.value.name);
     if (errMsg.value) {
         return;
     }
-    btnState();
+
+    loading.value = true;
     try {
         setTimespan();
         user.value.img = await useGetUserImage(u, k);
@@ -101,10 +100,7 @@ const handleClick = async (u, p, k) => {
         artists = await useGetArtists(u, p, k);
         colors = await getColors(mess.number1[0].image);
         stats = await useGetListeningStats(u, key, timespan.value);
-    } catch (err) {
-        return;
-    }
-    try {
+
         if (
             tracks.tracks.length > 0 &&
             mess.albums.length > 0 &&
@@ -116,20 +112,15 @@ const handleClick = async (u, p, k) => {
             setTimeout(() => (imgPrint.value = true), 3000);
         }
     } catch (err) {
-        console.log(err);
+        const rawErrorCode =
+            err?.response?._data?.error ?? err?.data?.error ?? err?.error;
+        const errorCode = Number(rawErrorCode) || 0;
+
+        errMsg.value =
+            LastFmErrorCheck(errorCode, user.value.name) ||
+            "Unable to generate your Toptop right now. Please try again.";
+        console.error(err);
     } finally {
-        btnState();
-    }
-};
-
-const btnState = () => {
-    let btn = document.getElementById("btn-generate");
-
-    if (!loading.value) {
-        btn.setAttribute("disabled", true);
-        loading.value = true;
-    } else {
-        btn.removeAttribute("disabled");
         loading.value = false;
     }
 };
@@ -335,7 +326,8 @@ onMounted(async () => {
                         id="btn-generate"
                         @click="handleClick(user.name, period, key)"
                         type="button"
-                        class="text-white w-full bg-gray-700/50 hover:bg-gray-800/50 font-semibold focus:outline focus:-outline-offset-2 focus:outline-white rounded-lg text-base leading-tight px-5 py-2.5 text-center me-2 inline-flex items-center justify-center"
+                        :disabled="loading"
+                        class="text-white w-full bg-gray-700/50 hover:bg-gray-800/50 font-semibold focus:outline focus:-outline-offset-2 focus:outline-white rounded-lg text-base leading-tight px-5 py-2.5 text-center me-2 inline-flex items-center justify-center disabled:cursor-not-allowed disabled:opacity-60"
                     >
                         <svg
                             v-if="loading"

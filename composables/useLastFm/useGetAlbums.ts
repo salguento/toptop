@@ -73,7 +73,7 @@ const useGetAlbums = async (
     topGenre = getTopGenre(genres);
     return { albums: albums, grid: grid, number1: number1, topGenre: topGenre };
   } catch (err) {
-    console.log(err);
+    throw err;
   }
 };
 
