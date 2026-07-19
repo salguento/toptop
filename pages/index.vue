@@ -63,7 +63,7 @@ const loading = ref(false);
 const imgPrint = ref(false);
 const timespan = ref("");
 const g = ref("");
-const genImg = ref("");
+const imgUrl = ref("");
 
 const date = new Date();
 const day = date.getDate();
@@ -81,7 +81,6 @@ let grid = [];
 let genres = [];
 let colors = [];
 let mess = {};
-let imgUrl = "";
 let stats;
 
 const handleClick = async (u, p, k) => {
@@ -149,24 +148,32 @@ const setTimespan = () => {
 };
 
 const print = async () => {
-    let node = document.getElementById("canvas");
-    await domtoimage
-        .toPng(node, { copyDefaultStyles: false, height: 1920, width: 1080 })
-        .then(function (dataUrl) {
-            let img = new Image();
-            img.src = dataUrl;
-            document.getElementById("print").appendChild(img);
-            imgUrl = dataUrl;
-        })
-        .catch(function (error) {
-            console.error("oops, something went wrong!", error);
+    const node = document.getElementById("canvas");
+
+    try {
+        const dataUrl = await domtoimage.toPng(node, {
+            copyDefaultStyles: false,
+            height: 1920,
+            width: 1080,
         });
+        const img = new Image();
+        img.src = dataUrl;
+        document.getElementById("print").appendChild(img);
+        imgUrl.value = dataUrl;
+    } catch (error) {
+        console.error("Unable to create image", error);
+        snack("Error creating image");
+    }
 };
 
-const handleSave = (downloadUrl) => {
-    let downloadLink = document.createElement("a");
+const handleSave = () => {
+    if (!imgUrl.value) {
+        snack("Image is not ready yet");
+        return;
+    }
 
-    downloadLink.href = downloadUrl;
+    const downloadLink = document.createElement("a");
+    downloadLink.href = imgUrl.value;
 
     downloadLink.download =
         "toptop-" +
@@ -188,6 +195,8 @@ const clear = () => {
     }
 
     load.value = false;
+    imgPrint.value = false;
+    imgUrl.value = "";
     timespan.value = "";
     g.value = "";
     errMsg.value = "";
@@ -553,8 +562,9 @@ onMounted(async () => {
                 </button>
                 <button
                     type="button"
-                    @click="handleSave(genImg)"
-                    class="w-full rounded-md bg-gray-700/50 px-3.5 leading-tight py-2.5 text-center text-sm font-semibold text-white shadow-sm hover:bg-gray-800/50 focus-visible:outline focus-visible:outline-1 focus-visible:outline-offset-2 focus-visible:outline-white flex flex-row items-center gap-2 justify-center"
+                    @click="handleSave()"
+                    :disabled="!imgUrl"
+                    class="w-full rounded-md bg-gray-700/50 px-3.5 leading-tight py-2.5 text-center text-sm font-semibold text-white shadow-sm hover:bg-gray-800/50 focus-visible:outline focus-visible:outline-1 focus-visible:outline-offset-2 focus-visible:outline-white flex flex-row items-center gap-2 justify-center disabled:cursor-not-allowed disabled:opacity-60"
                     title="Save"
                 >
                     <Icon
@@ -567,7 +577,8 @@ onMounted(async () => {
                     <button
                         type="button"
                         @click="copyImageFromUrl(imgUrl)"
-                        class="w-full rounded-md bg-gray-700/50 px-3.5 leading-tight py-2.5 text-center text-sm font-semibold text-white shadow-sm hover:bg-gray-800/50 focus-visible:outline focus-visible:outline-1 focus-visible:outline-offset-2 focus-visible:outline-white flex flex-row items-center gap-2 justify-center"
+                        :disabled="!imgUrl"
+                        class="w-full rounded-md bg-gray-700/50 px-3.5 leading-tight py-2.5 text-center text-sm font-semibold text-white shadow-sm hover:bg-gray-800/50 focus-visible:outline focus-visible:outline-1 focus-visible:outline-offset-2 focus-visible:outline-white flex flex-row items-center gap-2 justify-center disabled:cursor-not-allowed disabled:opacity-60"
                         title="Copy to clipboard"
                     >
                         <Icon name="i-solar:copy-outline" class="h-6 w-6" />
