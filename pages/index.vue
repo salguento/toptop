@@ -49,6 +49,7 @@ const apiRoot = config.public.apiBase;
 const key = config.public.apiKey;
 
 let domtoimage = null;
+let generationId = 0;
 
 // const topTopStore = useTopTopStore();
 // const { albums, number1, grid, genres, colors, user, tracks, artists } =
@@ -60,7 +61,6 @@ const user = ref({
 const period = ref("7day");
 const load = ref(false);
 const loading = ref(false);
-const imgPrint = ref(false);
 const timespan = ref("");
 const g = ref("");
 const imgUrl = ref("");
@@ -85,6 +85,7 @@ let stats;
 
 const handleClick = async (u, p, k) => {
     clear();
+    const currentGeneration = generationId;
     errMsg.value = LastFmErrorCheck(0, user.value.name);
     if (errMsg.value) {
         return;
@@ -101,6 +102,8 @@ const handleClick = async (u, p, k) => {
                 useGetArtists(u, p, k),
                 useGetListeningStats(u, k, timespan.value),
             ]);
+
+        if (currentGeneration !== generationId) return;
 
         user.value.img = userImage;
         tracks = topTracks;
@@ -119,12 +122,20 @@ const handleClick = async (u, p, k) => {
         }
 
         colors = await getColors(mess.number1[0].image);
+        if (currentGeneration !== generationId) return;
 
         load.value = true;
-        setTimeout(() => addColors(), 750);
-        setTimeout(() => print(), 1250);
-        setTimeout(() => (imgPrint.value = true), 3000);
+        await nextTick();
+        if (currentGeneration !== generationId) return;
+
+        addColors();
+        await waitForCanvasImages();
+        if (currentGeneration !== generationId) return;
+
+        await print(currentGeneration);
     } catch (err) {
+        if (currentGeneration !== generationId) return;
+
         const rawErrorCode =
             err?.response?._data?.error ?? err?.data?.error ?? err?.error;
         const errorCode = Number(rawErrorCode) || 0;
@@ -134,7 +145,9 @@ const handleClick = async (u, p, k) => {
             "Unable to generate your Toptop right now. Please try again.";
         console.error(err);
     } finally {
-        loading.value = false;
+        if (currentGeneration === generationId) {
+            loading.value = false;
+        }
     }
 };
 
@@ -161,20 +174,57 @@ const setTimespan = () => {
     }
 };
 
-const print = async () => {
+const waitForCanvasImages = async () => {
     const node = document.getElementById("canvas");
+    if (!node) throw new Error("Canvas element was not found");
+
+    const images = Array.from(node.querySelectorAll("img"));
+    await Promise.all(
+        images.map((image) => {
+            if (image.complete) return Promise.resolve();
+
+            return new Promise((resolve) => {
+                let timeoutId;
+                const finish = () => {
+                    image.removeEventListener("load", finish);
+                    image.removeEventListener("error", finish);
+                    clearTimeout(timeoutId);
+                    resolve();
+                };
+
+                image.addEventListener("load", finish, { once: true });
+                image.addEventListener("error", finish, { once: true });
+                timeoutId = setTimeout(finish, 5000);
+            });
+        }),
+    );
+};
+
+const print = async (currentGeneration) => {
+    const node = document.getElementById("canvas");
+    const printContainer = document.getElementById("print");
 
     try {
+        if (!node || !printContainer) {
+            throw new Error("Image container was not found");
+        }
+
+        domtoimage ??= await import("dom-to-image-more");
         const dataUrl = await domtoimage.toPng(node, {
             copyDefaultStyles: false,
             height: 1920,
             width: 1080,
         });
+
+        if (currentGeneration !== generationId) return;
+
         const img = new Image();
         img.src = dataUrl;
-        document.getElementById("print").appendChild(img);
+        printContainer.appendChild(img);
         imgUrl.value = dataUrl;
     } catch (error) {
+        if (currentGeneration !== generationId) return;
+
         console.error("Unable to create image", error);
         snack("Error creating image");
     }
@@ -203,13 +253,15 @@ const handleSave = () => {
 };
 
 const clear = () => {
-    let print = document.getElementById("print");
+    generationId += 1;
+    loading.value = false;
+
+    const print = document.getElementById("print");
     while (print.hasChildNodes()) {
         print.removeChild(print.firstChild);
     }
 
     load.value = false;
-    imgPrint.value = false;
     imgUrl.value = "";
     timespan.value = "";
     g.value = "";
