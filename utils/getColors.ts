@@ -1,44 +1,53 @@
 import { extractColors } from "extract-colors";
-import type { Color, Number1 } from "~/types/ItemTopTop";
+
+const TARGET_MIN_COLORS = 8;
+const TARGET_MAX_COLORS = 10;
+const MAX_ATTEMPTS = 8;
+const DISTANCE_STEP = 0.025;
+
+const colorCountDistance = (count: number) => {
+  if (count < TARGET_MIN_COLORS) return TARGET_MIN_COLORS - count;
+  if (count > TARGET_MAX_COLORS) return count - TARGET_MAX_COLORS;
+  return 0;
+};
 
 const getColors = async (image: string) => {
-  let colors;
-  let p = 10000;
-  let d = 0.2;
-  let s = 0.2;
-  let l = 0;
-  let h = 0.083;
-  colors = await extractColors(image, {
-    pixels: p,
-    distance: d,
-    saturationDistance: s,
-    lightnessDistance: l,
-    hueDistance: h,
-  });
+  let distance = 0.2;
+  let bestColors: Awaited<ReturnType<typeof extractColors>> = [];
 
-  while (colors.length < 8) {
-    d -= 0.01;
-    colors = await extractColors(image, {
-      pixels: p,
-      distance: d,
-      saturationDistance: s,
-      lightnessDistance: l,
-      hueDistance: h,
+  for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+    const colors = await extractColors(image, {
+      pixels: 10000,
+      distance,
+      saturationDistance: 0.2,
+      lightnessDistance: 0,
+      hueDistance: 0.083,
     });
+
+    if (
+      bestColors.length === 0 ||
+      colorCountDistance(colors.length) < colorCountDistance(bestColors.length)
+    ) {
+      bestColors = colors;
+    }
+
+    if (
+      colors.length >= TARGET_MIN_COLORS &&
+      colors.length <= TARGET_MAX_COLORS
+    ) {
+      bestColors = colors;
+      break;
+    }
+
+    const adjustment =
+      colors.length < TARGET_MIN_COLORS ? -DISTANCE_STEP : DISTANCE_STEP;
+    const nextDistance = Math.min(1, Math.max(0, distance + adjustment));
+
+    if (nextDistance === distance) break;
+    distance = nextDistance;
   }
 
-  while (colors.length > 10) {
-    d += 0.01;
-    colors = await extractColors(image, {
-      pixels: p,
-      distance: d,
-      saturationDistance: s,
-      lightnessDistance: l,
-      hueDistance: h,
-    });
-  }
-  colors.sort((a, b) => a.lightness - b.lightness);
-  return colors;
+  return bestColors.sort((a, b) => a.lightness - b.lightness);
 };
 
 export default getColors;

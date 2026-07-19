@@ -1,59 +1,47 @@
 import type { Color } from "~/types/ItemTopTop";
 
-const getPalette = (color: Color[]) => {
-  let primary;
-  let secondary;
-  let text;
-  let pLightness;
-  let lightIndex,
-    darkIndex = 0;
+const DEFAULT_PALETTE = {
+  primary: "#020617",
+  secondary: "#334155",
+  text: "#ffffff",
+};
 
-  const darkHex = (color: Color[]) => {
-    color.sort((a, b) => a.lightness - b.lightness);
-    return color[0].hex;
-  };
+const getPalette = (colors: Color[]) => {
+  if (colors.length === 0) return DEFAULT_PALETTE;
 
-  const lightHex = (color: Color[]) => {
-    color.sort((a, b) => b.lightness - a.lightness);
-    return color[0].hex;
-  };
-
-  color.forEach((i) => {
-    i.pRation = i.area * 3 + i.intensity * 4 - i.lightness;
-    if (i.lightness > 0.5) {
-      lightIndex += 1;
-    } else {
-      darkIndex += 1;
-    }
-  });
-  color.sort((a, b) => b.pRation - a.pRation);
+  let rankedColors = colors
+    .map((color) => ({
+      ...color,
+      pRation: color.area * 3 + color.intensity * 4 - color.lightness,
+    }))
+    .sort((a, b) => b.pRation - a.pRation);
 
   if (
-    Math.round(color[0].lightness) !== Math.round(color[1].lightness) &&
-    color[2].pRation < -0.1
+    rankedColors.length >= 3 &&
+    Math.round(rankedColors[0].lightness) !==
+      Math.round(rankedColors[1].lightness) &&
+    rankedColors[2].pRation < -0.1
   ) {
-    color.forEach((i) => {
-      i.pRation = i.area + i.intensity + i.lightness / 2;
-    });
-    color = color.sort((a, b) => b.pRation - a.pRation);
+    rankedColors = rankedColors
+      .map((color) => ({
+        ...color,
+        pRation: color.area + color.intensity + color.lightness / 2,
+      }))
+      .sort((a, b) => b.pRation - a.pRation);
   }
 
-  primary = color[0].hex;
-  secondary = color[1].hex;
-  pLightness = color[0].lightness + color[1].lightness;
+  const primaryColor = rankedColors[0];
+  const secondaryColor = rankedColors[1] ?? primaryColor;
+  const text =
+    primaryColor.lightness + secondaryColor.lightness > 1
+      ? "#000000"
+      : "#ffffff";
 
-  if (pLightness > 1) {
-    text = "#000000";
-  } else {
-    text = "#ffffff";
-  }
-
-  if (primary === text || secondary === text) {
-    text = secondary;
-    secondary = primary;
-  }
-
-  return { primary: primary, secondary: secondary, text: text };
+  return {
+    primary: primaryColor.hex,
+    secondary: secondaryColor.hex,
+    text,
+  };
 };
 
 export default getPalette;
