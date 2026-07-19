@@ -12,6 +12,9 @@
     "vue": "latest",
     "vue-router": "latest"
   },
+  "engines": {
+    "node": "22.x"
+  },
   "private": true,
   "scripts": {
     "build": "nuxt build",

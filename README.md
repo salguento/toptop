@@ -4,6 +4,12 @@ Look at the [Nuxt documentation](https://nuxt.com/docs/getting-started/introduct
 
 ## Setup
 
+Use Node.js 22 before installing dependencies:
+
+```bash
+nvm use
+```
+
 Make sure to install dependencies:
 
 ```bash
