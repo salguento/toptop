@@ -14,37 +14,43 @@ const colorCountDistance = (count: number) => {
 const getColors = async (image: string) => {
   let distance = 0.2;
   let bestColors: Awaited<ReturnType<typeof extractColors>> = [];
+  const imageUrl = `/api/image?url=${encodeURIComponent(image)}`;
 
-  for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
-    const colors = await extractColors(image, {
-      pixels: 10000,
-      distance,
-      saturationDistance: 0.2,
-      lightnessDistance: 0,
-      hueDistance: 0.083,
-    });
+  try {
+    for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+      const colors = await extractColors(imageUrl, {
+        pixels: 10000,
+        distance,
+        saturationDistance: 0.2,
+        lightnessDistance: 0,
+        hueDistance: 0.083,
+      });
 
-    if (
-      bestColors.length === 0 ||
-      colorCountDistance(colors.length) < colorCountDistance(bestColors.length)
-    ) {
-      bestColors = colors;
+      if (
+        bestColors.length === 0 ||
+        colorCountDistance(colors.length) < colorCountDistance(bestColors.length)
+      ) {
+        bestColors = colors;
+      }
+
+      if (
+        colors.length >= TARGET_MIN_COLORS &&
+        colors.length <= TARGET_MAX_COLORS
+      ) {
+        bestColors = colors;
+        break;
+      }
+
+      const adjustment =
+        colors.length < TARGET_MIN_COLORS ? -DISTANCE_STEP : DISTANCE_STEP;
+      const nextDistance = Math.min(1, Math.max(0, distance + adjustment));
+
+      if (nextDistance === distance) break;
+      distance = nextDistance;
     }
-
-    if (
-      colors.length >= TARGET_MIN_COLORS &&
-      colors.length <= TARGET_MAX_COLORS
-    ) {
-      bestColors = colors;
-      break;
-    }
-
-    const adjustment =
-      colors.length < TARGET_MIN_COLORS ? -DISTANCE_STEP : DISTANCE_STEP;
-    const nextDistance = Math.min(1, Math.max(0, distance + adjustment));
-
-    if (nextDistance === distance) break;
-    distance = nextDistance;
+  } catch (error) {
+    console.error("Unable to extract artwork colors", error);
+    return [];
   }
 
   return bestColors.sort((a, b) => a.lightness - b.lightness);

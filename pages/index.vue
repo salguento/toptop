@@ -61,6 +61,7 @@ const user = ref({
 const period = ref("7day");
 const load = ref(false);
 const loading = ref(false);
+const previewOpen = ref(false);
 const timespan = ref("");
 const g = ref("");
 const imgUrl = ref("");
@@ -212,6 +213,7 @@ const print = async (currentGeneration) => {
         domtoimage ??= await import("dom-to-image-more");
         const dataUrl = await domtoimage.toPng(node, {
             copyDefaultStyles: false,
+            disableEmbedFonts: true,
             height: 1920,
             width: 1080,
         });
@@ -252,9 +254,26 @@ const handleSave = () => {
     downloadLink.remove();
 };
 
+const openPreview = () => {
+    if (imgUrl.value) {
+        previewOpen.value = true;
+    }
+};
+
+const closePreview = () => {
+    previewOpen.value = false;
+};
+
+const handlePreviewKeydown = (event) => {
+    if (event.key === "Escape") {
+        closePreview();
+    }
+};
+
 const clear = () => {
     generationId += 1;
     loading.value = false;
+    closePreview();
 
     const print = document.getElementById("print");
     while (print.hasChildNodes()) {
@@ -316,8 +335,14 @@ const snack = (message) => {
 };
 
 onMounted(async () => {
+    document.addEventListener("keydown", handlePreviewKeydown);
+
     // Import only on client-side
     domtoimage = await import("dom-to-image-more");
+});
+
+onBeforeUnmount(() => {
+    document.removeEventListener("keydown", handlePreviewKeydown);
 });
 </script>
 
@@ -427,7 +452,17 @@ onMounted(async () => {
                 </div>
             </div>
 
-            <div id="print" class="rounded-lg relative overflow-hidden"></div>
+            <div
+                id="print"
+                :role="imgUrl ? 'button' : undefined"
+                :tabindex="imgUrl ? 0 : undefined"
+                :aria-label="imgUrl ? 'View generated image in full screen' : undefined"
+                class="rounded-lg relative overflow-hidden focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+                :class="{ 'cursor-zoom-in': imgUrl }"
+                @click="openPreview"
+                @keydown.enter="openPreview"
+                @keydown.space.prevent="openPreview"
+            ></div>
             <!-- <div id="canvas" class="overflow-hidden"> -->
             <div id="canvas" class="absolute left-[10000px] overflow-hidden">
                 <div
@@ -666,6 +701,33 @@ onMounted(async () => {
                 </a>
             </footer>
         </div>
+
+        <Teleport to="body">
+            <div
+                v-if="previewOpen"
+                class="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 p-4 backdrop-blur-sm md:p-8"
+                role="dialog"
+                aria-modal="true"
+                aria-label="Generated image preview"
+                @click.self="closePreview"
+            >
+                <button
+                    type="button"
+                    class="absolute right-4 top-4 flex h-11 w-11 items-center justify-center rounded-full bg-black/60 text-3xl leading-none text-white shadow-lg hover:bg-black/80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white md:right-8 md:top-8"
+                    aria-label="Close full-screen preview"
+                    title="Close"
+                    @click="closePreview"
+                >
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <img
+                    :src="imgUrl"
+                    alt="Generated Toptop image"
+                    class="max-h-full max-w-full rounded-lg object-contain shadow-2xl"
+                    @click.stop
+                />
+            </div>
+        </Teleport>
     </div>
 </template>
 
