@@ -138,29 +138,19 @@ const useGetAlbums = async (
   }
 
   const chosenAlbums = selectedAlbums.slice(0, TARGET_ALBUM_COUNT);
-  const processedAlbums: Array<AlbumWithArtwork & { genres: Genre[] }> = [];
-
-  for (
-    let index = 0;
-    index < chosenAlbums.length;
-    index += REQUEST_CONCURRENCY
-  ) {
-    const batch = await Promise.all(
-      chosenAlbums
-        .slice(index, index + REQUEST_CONCURRENCY)
-        .map(async ({ album, artwork }) => ({
-          album,
-          artwork,
-          genres: await fetchAlbumGenres(
-            album.name.replace(/\([^)]*\)/g, ""),
-            album.artist.name,
-            album.playcount,
-          ),
-        })),
-    );
-
-    processedAlbums.push(...batch);
-  }
+  const albumGenres = await fetchAlbumGenres(
+    chosenAlbums.map(({ album }) => ({
+      title: album.name.replace(/\([^)]*\)/g, ""),
+      artist: album.artist.name,
+      playcount: album.playcount,
+    })),
+  );
+  const processedAlbums: Array<AlbumWithArtwork & { genres: Genre[] }> =
+    chosenAlbums.map(({ album, artwork }, index) => ({
+      album,
+      artwork,
+      genres: albumGenres[index] ?? [],
+    }));
 
   const toDisplayAlbum = ({ album, artwork }: AlbumWithArtwork) => ({
     album: album.name,
