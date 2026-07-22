@@ -362,11 +362,11 @@ onBeforeUnmount(() => {
 
 <template>
     <div
-        class="w-screen h-screen flex justify-center items-center p-2 md:p-12 overflow-hidden"
+        class="relative isolate w-full h-[100dvh] min-h-screen flex justify-center items-center p-2 md:p-12 overflow-hidden"
     >
         <Background />
         <div
-            class="w-full container max-w-lg max-h-full h-fit overflow-scroll outline outline-1 outline-slate-500/20 rounded-[1.25rem] px-4 pt-6 pb-4 md:p-8 bg-slate-900/50 backdrop-blur-3xl flex flex-col items-center gap-4 md:gap-8"
+            class="relative z-10 w-full container max-w-lg max-h-full h-fit overflow-scroll outline outline-1 outline-slate-500/20 rounded-[1.25rem] px-4 pt-6 pb-4 md:p-8 bg-slate-900/50 backdrop-blur-3xl flex flex-col items-center gap-4 md:gap-8"
         >
             <div class="flex flex-col text-center">
                 <div
@@ -736,8 +736,10 @@ onBeforeUnmount(() => {
 </template>
 
 <style>
-body {
-    background-color: #020617;
+html,
+body,
+#__nuxt {
+    background-color: #0f0f1e;
 }
 
 .container {
