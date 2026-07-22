@@ -1,12 +1,6 @@
 <script setup>
-import { storeToRefs } from "pinia";
-import { extractColors } from "extract-colors";
-// import domtoimage from "dom-to-image-more";
-// Dictionary
-import genreList from "~/static/genreDictionary.json";
-// Store
-// import { useTopTopStore } from "@/stores/TopTopStore";
 // Composables
+import useGeneratedImageActions from "~/composables/useGeneratedImageActions";
 import useGetAlbums from "~/composables/useLastFm/useGetAlbums";
 import useGetListeningSummary from "~/composables/useLastFm/useGetListeningSummary";
 
@@ -59,18 +53,12 @@ useHead({
 });
 // Local variables
 const config = useRuntimeConfig();
-const apiRoot = config.public.apiBase;
 const key = config.public.apiKey;
 
 let domToImagePromise = null;
 let generationId = 0;
-let generatedImageBlob = null;
-let generatedImageUrl = "";
 let snackTimeoutId;
 
-// const topTopStore = useTopTopStore();
-// const { albums, number1, grid, genres, colors, user, tracks, artists } =
-//   storeToRefs(topTopStore);
 const user = ref({
     name: "",
     img: "",
@@ -80,10 +68,7 @@ const hideMissingArtwork = ref(false);
 const load = ref(false);
 const loading = ref(false);
 const previewOpen = ref(false);
-const imageReady = ref(false);
 const timespan = ref("");
-const g = ref("");
-const imgUrl = ref("");
 const snackMessage = ref("");
 const usernameInput = ref(null);
 
@@ -97,11 +82,6 @@ const errMsg = ref("");
 
 let tracks = {};
 let artists = [];
-let albums = [];
-let number1 = [];
-let grid = [];
-let genres = [];
-let albumColorSets = [];
 let gradientPalette = null;
 let mess = {};
 let stats;
@@ -174,7 +154,7 @@ const handleClick = async (u, p, k) => {
         }
 
         const colorCount = getGradientColorCount(tracks.scrobbleCount);
-        albumColorSets = await Promise.all(
+        const albumColorSets = await Promise.all(
             mess.paletteAlbums
                 .slice(0, colorCount)
                 .map(({ image }) => getColors(image)),
@@ -311,10 +291,7 @@ const print = async (currentGeneration) => {
             return;
         }
 
-        generatedImageBlob = blob;
-        generatedImageUrl = objectUrl;
-        imgUrl.value = objectUrl;
-        imageReady.value = true;
+        setGeneratedImage(blob, objectUrl);
     } catch (error) {
         if (currentGeneration !== generationId) return;
 
@@ -335,120 +312,6 @@ const getGeneratedImageName = () => {
     ].join("-");
 
     return `toptop-${safeUsername}-${safePeriod}-${safeDate}.png`;
-};
-
-const getGeneratedImageFile = () => {
-    if (!generatedImageBlob || typeof File !== "function") return null;
-
-    return new File(
-        [generatedImageBlob],
-        getGeneratedImageName(),
-        {
-            type: "image/png",
-            lastModified: Date.now(),
-        },
-    );
-};
-
-const canShareImageFile = (file) => {
-    try {
-        return (
-            file &&
-            typeof navigator.share === "function" &&
-            typeof navigator.canShare === "function" &&
-            navigator.canShare({ files: [file] })
-        );
-    } catch {
-        return false;
-    }
-};
-
-const shareImageFile = async (file) => {
-    if (!canShareImageFile(file)) return "unsupported";
-
-    try {
-        await navigator.share({
-            files: [file],
-            title: "My Toptop",
-            text: "My listening stats on Toptop",
-        });
-        return "shared";
-    } catch (error) {
-        if (error?.name === "AbortError") return "cancelled";
-        return "failed";
-    }
-};
-
-const saveImageWithFilePicker = async (suggestedName) => {
-    if (typeof window.showSaveFilePicker !== "function") {
-        return "unsupported";
-    }
-
-    try {
-        const fileHandle = await window.showSaveFilePicker({
-            suggestedName,
-            types: [
-                {
-                    description: "PNG image",
-                    accept: { "image/png": [".png"] },
-                },
-            ],
-        });
-        const writable = await fileHandle.createWritable();
-        await writable.write(generatedImageBlob);
-        await writable.close();
-        return "saved";
-    } catch (error) {
-        if (error?.name === "AbortError") return "cancelled";
-        return "failed";
-    }
-};
-
-const downloadGeneratedImage = (fileName) => {
-    if (!generatedImageBlob || !generatedImageUrl) return false;
-
-    try {
-        const downloadLink = document.createElement("a");
-        downloadLink.href = generatedImageUrl;
-        downloadLink.download = fileName;
-        downloadLink.style.display = "none";
-        document.body.appendChild(downloadLink);
-        downloadLink.click();
-        downloadLink.remove();
-        return true;
-    } catch {
-        return false;
-    }
-};
-
-const handleSave = async () => {
-    const file = getGeneratedImageFile();
-    if (!imageReady.value || !generatedImageBlob || !generatedImageUrl) {
-        snack("Image is not ready yet");
-        return;
-    }
-
-    const fileName = file?.name ?? getGeneratedImageName();
-    const saveResult = await saveImageWithFilePicker(fileName);
-    if (saveResult === "saved") {
-        snack("Image saved");
-        return;
-    }
-    if (saveResult === "cancelled") return;
-
-    const shareResult = file ? await shareImageFile(file) : "unsupported";
-    if (shareResult === "shared") {
-        snack("Opened device share options");
-        return;
-    }
-    if (shareResult === "cancelled") return;
-
-    if (downloadGeneratedImage(fileName)) {
-        snack("PNG download started");
-        return;
-    }
-
-    snack("Unable to save the image. Please try again.");
 };
 
 const openPreview = () => {
@@ -485,24 +348,12 @@ const clear = () => {
     }
 
     load.value = false;
-    imageReady.value = false;
-    imgUrl.value = "";
-    generatedImageBlob = null;
-    if (generatedImageUrl) {
-        URL.revokeObjectURL(generatedImageUrl);
-        generatedImageUrl = "";
-    }
+    clearGeneratedImage();
     snackMessage.value = "";
     timespan.value = "";
-    g.value = "";
     errMsg.value = "";
     tracks = {};
     artists = [];
-    albums = [];
-    number1 = [];
-    grid = [];
-    genres = [];
-    albumColorSets = [];
     gradientPalette = null;
 };
 
@@ -524,37 +375,6 @@ const addColors = () => {
     post.style.color = gradientPalette.text;
 };
 
-const copyGeneratedImage = async () => {
-    const file = getGeneratedImageFile();
-    if (!imageReady.value || !generatedImageBlob) {
-        snack("Image is not ready yet");
-        return;
-    }
-
-    try {
-        if (
-            typeof ClipboardItem !== "function" ||
-            typeof navigator.clipboard?.write !== "function"
-        ) {
-            throw new Error("Clipboard API not supported");
-        }
-
-        const clipboardItem = new ClipboardItem({
-            "image/png": generatedImageBlob,
-        });
-
-        await navigator.clipboard.write([clipboardItem]);
-        snack("Image copied");
-    } catch {
-        const shareResult = file ? await shareImageFile(file) : "unsupported";
-        if (shareResult === "shared") {
-            snack("Clipboard unavailable; opened share options");
-        } else if (shareResult !== "cancelled") {
-            snack("This browser cannot copy images");
-        }
-    }
-};
-
 const snack = (message) => {
     clearTimeout(snackTimeoutId);
     snackMessage.value = message;
@@ -562,6 +382,18 @@ const snack = (message) => {
         snackMessage.value = "";
     }, 2500);
 };
+
+const {
+    imageReady,
+    imageUrl: imgUrl,
+    clearGeneratedImage,
+    copyGeneratedImage,
+    saveGeneratedImage,
+    setGeneratedImage,
+} = useGeneratedImageActions({
+    getFileName: getGeneratedImageName,
+    notify: snack,
+});
 
 onMounted(() => {
     document.addEventListener("keydown", handlePreviewKeydown);
@@ -571,7 +403,6 @@ onMounted(() => {
 onBeforeUnmount(() => {
     document.removeEventListener("keydown", handlePreviewKeydown);
     clearTimeout(snackTimeoutId);
-    if (generatedImageUrl) URL.revokeObjectURL(generatedImageUrl);
 });
 </script>
 
@@ -892,7 +723,7 @@ onBeforeUnmount(() => {
                 </button>
                 <button
                     type="button"
-                    @click="handleSave()"
+                    @click="saveGeneratedImage()"
                     class="w-full rounded-md bg-slate-700/90 px-3.5 leading-tight py-2.5 text-center text-sm font-semibold text-white shadow-sm hover:bg-slate-800/90 focus-visible:outline focus-visible:outline-1 focus-visible:outline-offset-2 focus-visible:outline-white flex flex-row items-center gap-2 justify-center"
                     title="Save"
                 >
