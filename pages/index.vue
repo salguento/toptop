@@ -423,7 +423,7 @@ onBeforeUnmount(() => {
             </div>
             <form
                 v-if="!load"
-                class="relative flex w-full flex-col gap-2 px-12"
+                class="relative flex w-full flex-col gap-2 px-4 md:px-12"
                 autocomplete="off"
                 @submit.prevent="handleClick(user.name, period, key)"
             >
@@ -537,6 +537,7 @@ onBeforeUnmount(() => {
 
             <div
                 id="print"
+                v-show="imageReady"
                 :role="imgUrl ? 'button' : undefined"
                 :tabindex="imgUrl ? 0 : undefined"
                 :aria-label="imgUrl ? 'View generated image in full screen' : undefined"

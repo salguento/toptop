@@ -1,27 +1,33 @@
 <script setup lang="ts">
 const bars = [
-    { low: 0.18, mid: 0.48, peak: 0.76, duration: "1.38s", delay: "-0.84s", color: "#22d3ee" },
-    { low: 0.32, mid: 0.72, peak: 0.94, duration: "1.12s", delay: "-0.25s", color: "#38bdf8" },
-    { low: 0.12, mid: 0.44, peak: 0.68, duration: "1.56s", delay: "-1.12s", color: "#60a5fa" },
-    { low: 0.42, mid: 0.68, peak: 0.88, duration: "1.24s", delay: "-0.68s", color: "#818cf8" },
-    { low: 0.24, mid: 0.58, peak: 0.82, duration: "1.72s", delay: "-1.31s", color: "#8b5cf6" },
-    { low: 0.36, mid: 0.76, peak: 1, duration: "1.18s", delay: "-0.46s", color: "#a855f7" },
-    { low: 0.16, mid: 0.5, peak: 0.74, duration: "1.46s", delay: "-0.96s", color: "#c084fc" },
-    { low: 0.46, mid: 0.64, peak: 0.9, duration: "1.3s", delay: "-0.17s", color: "#d946ef" },
-    { low: 0.22, mid: 0.7, peak: 0.96, duration: "1.62s", delay: "-1.22s", color: "#e879f9" },
-    { low: 0.38, mid: 0.56, peak: 0.8, duration: "1.08s", delay: "-0.54s", color: "#f472b6" },
-    { low: 0.14, mid: 0.62, peak: 0.86, duration: "1.42s", delay: "-0.74s", color: "#fb7185" },
-    { low: 0.3, mid: 0.78, peak: 1, duration: "1.26s", delay: "-1.04s", color: "#f59e0b" },
-    { low: 0.2, mid: 0.52, peak: 0.78, duration: "1.52s", delay: "-0.31s", color: "#fbbf24" },
-    { low: 0.4, mid: 0.66, peak: 0.92, duration: "1.16s", delay: "-0.89s", color: "#f472b6" },
-    { low: 0.12, mid: 0.48, peak: 0.72, duration: "1.68s", delay: "-1.37s", color: "#e879f9" },
-    { low: 0.34, mid: 0.74, peak: 0.98, duration: "1.22s", delay: "-0.42s", color: "#c084fc" },
-    { low: 0.18, mid: 0.54, peak: 0.84, duration: "1.48s", delay: "-1.08s", color: "#a855f7" },
-    { low: 0.44, mid: 0.7, peak: 0.9, duration: "1.14s", delay: "-0.63s", color: "#818cf8" },
-    { low: 0.26, mid: 0.6, peak: 0.88, duration: "1.58s", delay: "-1.16s", color: "#60a5fa" },
-    { low: 0.16, mid: 0.46, peak: 0.7, duration: "1.34s", delay: "-0.36s", color: "#38bdf8" },
-    { low: 0.38, mid: 0.72, peak: 0.96, duration: "1.2s", delay: "-0.92s", color: "#22d3ee" },
+    { low: 0.18, mid: 0.48, peak: 0.76, duration: "1.73s", delay: "-1.05s", color: "#22d3ee" },
+    { low: 0.32, mid: 0.72, peak: 0.94, duration: "1.4s", delay: "-0.31s", color: "#38bdf8" },
+    { low: 0.12, mid: 0.44, peak: 0.68, duration: "1.95s", delay: "-1.4s", color: "#60a5fa" },
+    { low: 0.42, mid: 0.68, peak: 0.88, duration: "1.55s", delay: "-0.85s", color: "#818cf8" },
+    { low: 0.24, mid: 0.58, peak: 0.82, duration: "2.15s", delay: "-1.64s", color: "#8b5cf6" },
+    { low: 0.36, mid: 0.76, peak: 1, duration: "1.48s", delay: "-0.58s", color: "#a855f7" },
+    { low: 0.16, mid: 0.5, peak: 0.74, duration: "1.83s", delay: "-1.2s", color: "#c084fc" },
+    { low: 0.46, mid: 0.64, peak: 0.9, duration: "1.63s", delay: "-0.21s", color: "#d946ef" },
+    { low: 0.22, mid: 0.7, peak: 0.96, duration: "2.03s", delay: "-1.53s", color: "#e879f9" },
+    { low: 0.38, mid: 0.56, peak: 0.8, duration: "1.35s", delay: "-0.68s", color: "#f472b6" },
+    { low: 0.14, mid: 0.62, peak: 0.86, duration: "1.78s", delay: "-0.93s", color: "#fb7185" },
+    { low: 0.3, mid: 0.78, peak: 1, duration: "1.58s", delay: "-1.3s", color: "#f59e0b" },
+    { low: 0.2, mid: 0.52, peak: 0.78, duration: "1.9s", delay: "-0.39s", color: "#fbbf24" },
+    { low: 0.4, mid: 0.66, peak: 0.92, duration: "1.45s", delay: "-1.11s", color: "#f472b6" },
+    { low: 0.12, mid: 0.48, peak: 0.72, duration: "2.1s", delay: "-1.71s", color: "#e879f9" },
+    { low: 0.34, mid: 0.74, peak: 0.98, duration: "1.53s", delay: "-0.53s", color: "#c084fc" },
+    { low: 0.18, mid: 0.54, peak: 0.84, duration: "1.85s", delay: "-1.35s", color: "#a855f7" },
+    { low: 0.44, mid: 0.7, peak: 0.9, duration: "1.43s", delay: "-0.79s", color: "#818cf8" },
+    { low: 0.26, mid: 0.6, peak: 0.88, duration: "1.98s", delay: "-1.45s", color: "#60a5fa" },
+    { low: 0.16, mid: 0.46, peak: 0.7, duration: "1.68s", delay: "-0.45s", color: "#38bdf8" },
+    { low: 0.38, mid: 0.72, peak: 0.96, duration: "1.5s", delay: "-1.15s", color: "#22d3ee" },
 ];
+
+const getColorDuration = (duration: string) =>
+    `${(Number.parseFloat(duration) * 6).toFixed(2)}s`;
+
+const getColorDelay = (delay: string, index: number) =>
+    `${(Number.parseFloat(delay) * 3 - index * 0.18).toFixed(2)}s`;
 </script>
 
 <template>
@@ -38,6 +44,8 @@ const bars = [
                     '--bar-duration': bar.duration,
                     '--bar-delay': bar.delay,
                     '--bar-color': bar.color,
+                    '--color-duration': getColorDuration(bar.duration),
+                    '--color-delay': getColorDelay(bar.delay, index),
                 }"
             ></span>
         </div>
@@ -73,7 +81,7 @@ const bars = [
     justify-content: center;
     gap: clamp(4px, 0.85vw, 14px);
     width: min(92vw, 38rem);
-    height: min(72.5vh, 30rem);
+    height: min(108.75vh, 45rem);
     opacity: 0.7;
     transform: translate(-50%, -50%);
 }
@@ -91,7 +99,9 @@ const bars = [
         color-mix(in srgb, var(--bar-color) 55%, transparent) 42%,
         var(--bar-color) 100%
     );
-    animation: audio-level var(--bar-duration) cubic-bezier(0.37, 0, 0.63, 1) var(--bar-delay) infinite;
+    animation:
+        audio-level var(--bar-duration) cubic-bezier(0.37, 0, 0.63, 1) var(--bar-delay) infinite,
+        bar-color-flow var(--color-duration) cubic-bezier(0.45, 0, 0.55, 1) var(--color-delay) infinite alternate;
 }
 
 @keyframes audio-level {
@@ -116,11 +126,29 @@ const bars = [
     }
 }
 
+@keyframes bar-color-flow {
+    0% {
+        filter: hue-rotate(-18deg) saturate(0.94) brightness(0.92);
+    }
+    28% {
+        filter: hue-rotate(32deg) saturate(1.12) brightness(1.06);
+    }
+    54% {
+        filter: hue-rotate(94deg) saturate(0.98) brightness(0.96);
+    }
+    78% {
+        filter: hue-rotate(164deg) saturate(1.14) brightness(1.08);
+    }
+    100% {
+        filter: hue-rotate(248deg) saturate(1.02) brightness(0.94);
+    }
+}
+
 @media (max-width: 640px) {
     .audio-towers {
         gap: 4px;
         width: calc(100vw - 0.5rem);
-        height: min(67.5vh, 27.5rem);
+        height: min(101.25vh, 41.25rem);
     }
 }
 
