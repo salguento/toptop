@@ -62,7 +62,7 @@ const config = useRuntimeConfig();
 const apiRoot = config.public.apiBase;
 const key = config.public.apiKey;
 
-let domtoimage = null;
+let domToImagePromise = null;
 let generationId = 0;
 let generatedImageBlob = null;
 let generatedImageUrl = "";
@@ -106,6 +106,9 @@ let gradientPalette = null;
 let mess = {};
 let stats;
 
+const loadDomToImage = () =>
+    (domToImagePromise ??= import("dom-to-image-more"));
+
 const handleClick = async (u, p, k) => {
     if (loading.value) return;
 
@@ -121,6 +124,7 @@ const handleClick = async (u, p, k) => {
 
     loading.value = true;
     try {
+        void loadDomToImage().catch(() => {});
         setTimespan();
         const { userData, topTracks, artistData, topAlbums } =
             await useGetListeningSummary(
@@ -273,8 +277,8 @@ const print = async (currentGeneration) => {
             throw new Error("Image container was not found");
         }
 
-        domtoimage ??= await import("dom-to-image-more");
-        const blob = await domtoimage.toBlob(node, {
+        const domToImage = await loadDomToImage();
+        const blob = await domToImage.toBlob(node, {
             copyDefaultStyles: false,
             disableEmbedFonts: true,
             height: 1920,
@@ -559,12 +563,9 @@ const snack = (message) => {
     }, 2500);
 };
 
-onMounted(async () => {
+onMounted(() => {
     document.addEventListener("keydown", handlePreviewKeydown);
     usernameInput.value?.focus();
-
-    // Import only on client-side
-    domtoimage = await import("dom-to-image-more");
 });
 
 onBeforeUnmount(() => {
