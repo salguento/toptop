@@ -100,6 +100,7 @@ const useGetAlbums = async (
 
   let page = 1;
   let totalPages = 1;
+  let totalAlbumCount = 0;
 
   while (
     selectedAlbums.length < TARGET_ALBUM_COUNT &&
@@ -107,6 +108,10 @@ const useGetAlbums = async (
   ) {
     const data = await fetchPage(page);
     totalPages = Number(data.topalbums["@attr"].totalPages) || 1;
+    if (page === 1) {
+      totalAlbumCount =
+        Number(data.topalbums["@attr"].total) || data.topalbums.album.length;
+    }
     const candidates = hideMissingArtwork
       ? data.topalbums.album
       : data.topalbums.album.slice(0, TARGET_ALBUM_COUNT);
@@ -166,6 +171,7 @@ const useGetAlbums = async (
 
   return {
     artworkCount: processedAlbums.length,
+    totalAlbums: totalAlbumCount,
     albums: processedAlbums.slice(1, 5).map(toDisplayAlbum),
     grid: processedAlbums.slice(1).map(({ artwork }) => artwork),
     number1: processedAlbums.slice(0, 1).map(toDisplayAlbum),

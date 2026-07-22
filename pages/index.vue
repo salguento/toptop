@@ -11,7 +11,6 @@ import useGetUserImage from "~/composables/useLastFm/useGetUserImage";
 import useGetTracks from "~/composables/useLastFm/useGetUserTracks";
 import useGetAlbums from "~/composables/useLastFm/useGetAlbums";
 import useGetArtists from "~/composables/useLastFm/useGetArtists";
-import useGetListeningStats from "~/composables/useLastFm/useGetListeningStats";
 
 //Utils
 import getColors from "~/utils/getColors";
@@ -124,13 +123,12 @@ const handleClick = async (u, p, k) => {
     loading.value = true;
     try {
         setTimespan();
-        const [userImage, topTracks, albumData, topArtists, listeningStats] =
+        const [userImage, topTracks, albumData, artistData] =
             await Promise.all([
                 useGetUserImage(username, k),
                 useGetTracks(username, p, k),
                 useGetAlbums(username, p, k, shouldHideMissingArtwork),
                 useGetArtists(username, p, k),
-                useGetListeningStats(username, k, timespan.value),
             ]);
 
         if (currentGeneration !== generationId) return;
@@ -138,8 +136,11 @@ const handleClick = async (u, p, k) => {
         user.value.img = userImage;
         tracks = topTracks;
         mess = albumData;
-        artists = topArtists;
-        stats = listeningStats;
+        artists = artistData.artists;
+        stats = {
+            uniqueArtists: artistData.totalArtists,
+            uniqueAlbums: albumData.totalAlbums,
+        };
 
         if (
             tracks.tracks.length === 0 ||

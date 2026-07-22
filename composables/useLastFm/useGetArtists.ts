@@ -18,11 +18,15 @@ const useGetArtists = async (
       "&format=json ",
   );
 
-  return data.topartists.artist.slice(0, 5).map((artist) => ({
-    artist: artist.name,
-    count: artist.playcount,
-    image: artist.image[3] ?? artist.image.at(-1),
-  }));
+  return {
+    artists: data.topartists.artist.slice(0, 5).map((artist) => ({
+      artist: artist.name,
+      count: artist.playcount,
+      image: artist.image[3] ?? artist.image.at(-1),
+    })),
+    totalArtists:
+      Number(data.topartists["@attr"].total) || data.topartists.artist.length,
+  };
 };
 
 export default useGetArtists;
