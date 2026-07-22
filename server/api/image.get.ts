@@ -6,6 +6,10 @@ const ALLOWED_IMAGE_HOSTS = new Set([
 ]);
 const MAX_IMAGE_SIZE = 10 * 1024 * 1024;
 const MAX_REDIRECTS = 3;
+const pendingImageRequests = new Map<
+  string,
+  Promise<{ contentType: string; data: ArrayBuffer }>
+>();
 
 const validateImageUrl = (value: string) => {
   let url: URL;
@@ -88,6 +92,18 @@ const fetchImage = async (initialUrl: URL) => {
   });
 };
 
+const fetchImageOnce = (url: URL) => {
+  const key = url.toString();
+  const pendingRequest = pendingImageRequests.get(key);
+  if (pendingRequest) return pendingRequest;
+
+  const request = fetchImage(url).finally(() => {
+    pendingImageRequests.delete(key);
+  });
+  pendingImageRequests.set(key, request);
+  return request;
+};
+
 export default defineEventHandler(async (event) => {
   const imageUrl = getQuery(event).url;
 
@@ -98,9 +114,13 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  const { contentType, data } = await fetchImage(validateImageUrl(imageUrl));
+  const { contentType, data } = await fetchImageOnce(validateImageUrl(imageUrl));
 
   setResponseHeader(event, "Content-Type", contentType);
-  setResponseHeader(event, "Cache-Control", "public, max-age=86400");
+  setResponseHeader(
+    event,
+    "Cache-Control",
+    "public, max-age=86400, s-maxage=604800, stale-while-revalidate=86400",
+  );
   return new Uint8Array(data);
 });
