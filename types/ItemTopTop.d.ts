@@ -15,7 +15,7 @@ export interface User {
 }
 
 export interface Tracks {
-  trackCount: string;
+  scrobbleCount: number;
   tracks: Track[];
 }
 
@@ -52,12 +52,12 @@ export interface Number1 {
 export interface Color {
   area: number;
   blue: number;
-  gree: number;
+  green: number;
   red: number;
   hex: string;
   hue: number;
   intensity: number;
   lightness: number;
-  pRation: number;
+  pRation?: number;
   saturation: number;
 }

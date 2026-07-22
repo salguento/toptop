@@ -15,6 +15,9 @@ import useGetListeningStats from "~/composables/useLastFm/useGetListeningStats";
 
 //Utils
 import getColors from "~/utils/getColors";
+import getGradientPalette, {
+    getGradientColorCount,
+} from "~/utils/getGradientPalette";
 import getPalette from "~/utils/getPalette";
 import LastFmErrorCheck from "~/utils/LastFmErrorCheck";
 // Meta
@@ -95,6 +98,8 @@ let number1 = [];
 let grid = [];
 let genres = [];
 let colors = [];
+let albumColorSets = [];
+let gradientPalette = null;
 let mess = {};
 let stats;
 
@@ -126,6 +131,22 @@ const handleClick = async (u, p, k) => {
         artists = topArtists;
         stats = listeningStats;
 
+        if (import.meta.dev) {
+            console.info("[gradient-input]", {
+                topGenre: albumData.topGenre,
+                scrobbleCount: topTracks.scrobbleCount,
+                paletteAlbums: albumData.paletteAlbums.map(
+                    ({ album, artist, count, image }, index) => ({
+                        position: index + 1,
+                        album,
+                        artist,
+                        scrobbles: Number(count),
+                        artwork: image,
+                    }),
+                ),
+            });
+        }
+
         if (
             tracks.tracks.length === 0 ||
             mess.number1.length === 0 ||
@@ -136,7 +157,38 @@ const handleClick = async (u, p, k) => {
             return;
         }
 
-        colors = await getColors(mess.number1[0].image);
+        const colorCount = getGradientColorCount(tracks.scrobbleCount);
+        albumColorSets = await Promise.all(
+            mess.paletteAlbums
+                .slice(0, colorCount)
+                .map(({ image }) => getColors(image)),
+        );
+        gradientPalette = getGradientPalette(
+            albumColorSets,
+            tracks.scrobbleCount,
+        );
+        colors = albumColorSets[0] ?? [];
+
+        if (import.meta.dev) {
+            console.info("[gradient-palette]", {
+                ...gradientPalette,
+                albums: mess.paletteAlbums
+                    .slice(0, colorCount)
+                    .map(({ album, artist }, index) => ({
+                        role: [
+                            "primary",
+                            "secondary",
+                            "tertiary",
+                            "quaternary",
+                            "quinary",
+                        ][index],
+                        album,
+                        artist,
+                        selectedColor: gradientPalette.colors[index],
+                        weight: gradientPalette.weights[index],
+                    })),
+            });
+        }
         if (currentGeneration !== generationId) return;
 
         load.value = true;
@@ -306,6 +358,8 @@ const clear = () => {
     grid = [];
     genres = [];
     colors = [];
+    albumColorSets = [];
+    gradientPalette = null;
 };
 
 const addColors = () => {
@@ -627,7 +681,7 @@ onBeforeUnmount(() => {
                                     <p
                                         class="font-semibold text-[2.5rem] leading-tight"
                                     >
-                                        {{ tracks.trackCount }}
+                                        {{ tracks.scrobbleCount }}
                                     </p>
                                 </div>
                                 <div v-if="stats.uniqueArtists != 0">

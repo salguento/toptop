@@ -76,6 +76,14 @@ const useGetAlbums = async (
     count: album.playcount,
     image: artwork,
   }));
+  const paletteAlbums = processedAlbums
+    .slice(0, 5)
+    .map(({ album, artwork }) => ({
+      album: album.name,
+      artist: album.artist.name,
+      count: album.playcount,
+      image: artwork,
+    }));
   const grid = processedAlbums.slice(1).map(({ artwork }) => artwork);
   const genres = processedAlbums.flatMap((album) => album.genres);
 
@@ -83,6 +91,7 @@ const useGetAlbums = async (
     albums,
     grid,
     number1,
+    paletteAlbums,
     topGenre: getTopGenre(genres),
   };
 };
