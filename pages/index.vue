@@ -123,7 +123,7 @@ const handleClick = async (u, p, k) => {
     loading.value = true;
     try {
         setTimespan();
-        const [userImage, topTracks, albumData, artistData] =
+        const [userData, topTracks, albumData, artistData] =
             await Promise.all([
                 useGetUserImage(username, k),
                 useGetTracks(username, p, k),
@@ -133,8 +133,12 @@ const handleClick = async (u, p, k) => {
 
         if (currentGeneration !== generationId) return;
 
-        user.value.img = userImage;
-        tracks = topTracks;
+        user.value.img = userData.image;
+        tracks = {
+            ...topTracks,
+            scrobbleCount:
+                topTracks.scrobbleCount ?? userData.overallScrobbleCount,
+        };
         mess = albumData;
         artists = artistData.artists;
         stats = {

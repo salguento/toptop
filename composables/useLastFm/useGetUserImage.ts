@@ -13,7 +13,10 @@ const useGetUserImage = async (userName: string, key: string) => {
         key +
         "&format=json ",
     );
-    return data.user.image[1]?.["#text"];
+    return {
+      image: data.user.image[1]?.["#text"] ?? "",
+      overallScrobbleCount: Number(data.user.playcount) || 0,
+    };
   } catch (err) {
     throw err;
   }
