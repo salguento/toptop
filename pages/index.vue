@@ -350,26 +350,16 @@ onBeforeUnmount(() => {
     <div
         class="w-screen h-screen flex justify-center items-center p-2 md:p-12 overflow-hidden"
     >
-        <!-- <Canvas /> -->
         <Background />
-        <!-- <div
-      class="w-full h-full overflow-scroll outline outline-1 outline-white/20 rounded-xl p-4 md:p-8 bg-gray-700/50 backdrop-blur-3xl flex flex-col gap-2"
-    > -->
         <div
-            class="w-full container max-w-lg max-h-full h-fit overflow-scroll outline outline-1 outline-white/20 rounded-xl p-4 md:p-8 bg-gray-700/50 backdrop-blur-3xl flex flex-col items-center gap-4 md:gap-8"
+            class="w-full container max-w-lg max-h-full h-fit overflow-scroll outline outline-1 outline-slate-500/20 rounded-[1.25rem] px-4 pt-6 pb-4 md:p-8 bg-slate-900/50 backdrop-blur-3xl flex flex-col items-center gap-4 md:gap-8"
         >
             <div class="flex flex-col text-center">
                 <div
                     class="w-full flex justify-center items-center md:gap-2 gap-1"
                 >
-                    <img class="h-6 md:h-10" src="/toptop.svg" />
-                    <h1
-                        class="text-white text-xl md:text-3xl font-bold leading-none"
-                    >
-                        toptop
-                    </h1>
+                    <img class="h-9" src="/toptop.svg" alt="Toptop logo" />
                 </div>
-                <!-- <p class="text-white/75 text-center">Spotlight your tops</p> -->
             </div>
             <div v-if="!load" class="flex flex-col gap-2 w-full relative">
                 <div class="flex flex-row gap-2 w-full">
@@ -381,7 +371,7 @@ onBeforeUnmount(() => {
                             id="username"
                             autocomplete="given-name"
                             placeholder="Last.fm user"
-                            class="block w-full rounded-lg bg-gray-700/50 px-3.5 py-2 text-base text-white focus:outline -outline-offset-2 outline-gray-300/50 placeholder:text-gray-400 focus:-outline-offset-2 focus:outline-white"
+                            class="block w-full rounded-[0.625rem] bg-slate-700/90 px-3.5 py-2 text-base text-white focus:outline -outline-offset-2 outline-slate-300/90 placeholder:text-slate-400 focus:-outline-offset-2 focus:outline-white"
                         />
                     </div>
 
@@ -392,7 +382,7 @@ onBeforeUnmount(() => {
                             name="country"
                             autocomplete="country"
                             aria-label="Country"
-                            class="col-start-1 row-start-1 w-full appearance-none rounded-lg py-2 pl-3.5 pr-7 text-base text-white focus:outline focus:-outline-offset-2 focus:outline-white sm:text-sm/6 bg-gray-700/50"
+                            class="col-start-1 row-start-1 w-full appearance-none rounded-[0.625rem] py-2 pl-3.5 pr-7 text-base text-white focus:outline focus:-outline-offset-2 focus:outline-white sm:text-sm/6 bg-slate-700/90"
                         >
                             <option value="7day">Weekly</option>
                             <option value="1month">Monthly</option>
@@ -402,7 +392,7 @@ onBeforeUnmount(() => {
                             <option value="overall">Overall</option>
                         </select>
                         <svg
-                            class="pointer-events-none col-start-1 row-start-1 mr-2 size-5 self-center justify-self-end text-gray-700 sm:size-4"
+                            class="pointer-events-none col-start-1 row-start-1 mr-2 size-5 self-center justify-self-end text-slate-400 sm:size-4"
                             viewBox="0 0 16 16"
                             fill="currentColor"
                             aria-hidden="true"
@@ -416,8 +406,8 @@ onBeforeUnmount(() => {
                         </svg>
                     </div>
                 </div>
-                <div v-if="errMsg" class="w-full bg-red-500/40 rounded-full">
-                    <p class="text-red-200 text-center font-medium">
+                <div v-if="errMsg" class="w-full bg-red-500/90 rounded-full">
+                    <p class="text-red-100 text-center font-medium">
                         {{ errMsg }}
                     </p>
                 </div>
@@ -427,7 +417,7 @@ onBeforeUnmount(() => {
                         @click="handleClick(user.name, period, key)"
                         type="button"
                         :disabled="loading"
-                        class="text-white w-full bg-gray-700/50 hover:bg-gray-800/50 font-semibold focus:outline focus:-outline-offset-2 focus:outline-white rounded-lg text-base leading-tight px-5 py-2.5 text-center me-2 inline-flex items-center justify-center disabled:cursor-not-allowed disabled:opacity-60"
+                        class="text-white w-full bg-slate-700/90 hover:bg-slate-50/90 hover:text-slate-700 font-semibold focus:outline focus:-outline-offset-2 focus:outline-white rounded-[0.625rem] text-base leading-tight px-5 py-2.5 text-center me-2 inline-flex items-center justify-center disabled:cursor-not-allowed disabled:opacity-60"
                     >
                         <svg
                             v-if="loading"
@@ -457,7 +447,7 @@ onBeforeUnmount(() => {
                 :role="imgUrl ? 'button' : undefined"
                 :tabindex="imgUrl ? 0 : undefined"
                 :aria-label="imgUrl ? 'View generated image in full screen' : undefined"
-                class="rounded-lg relative overflow-hidden focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+                class="rounded-[0.625rem] relative overflow-hidden focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
                 :class="{ 'cursor-zoom-in': imgUrl }"
                 @click="openPreview"
                 @keydown.enter="openPreview"
@@ -655,7 +645,7 @@ onBeforeUnmount(() => {
                 <button
                     type="button"
                     @click="clear()"
-                    class="w-full rounded-md bg-gray-700/50 px-3.5 leading-tight py-2.5 text-center text-sm font-semibold text-white shadow-sm hover:bg-gray-800/50 focus-visible:outline focus-visible:outline-1 focus-visible:outline-offset-2 focus-visible:outline-white flex flex-row items-center gap-2 justify-center"
+                    class="w-full rounded-md bg-slate-700/90 px-3.5 leading-tight py-2.5 text-center text-sm font-semibold text-white shadow-sm hover:bg-slate-800/90 focus-visible:outline focus-visible:outline-1 focus-visible:outline-offset-2 focus-visible:outline-white flex flex-row items-center gap-2 justify-center"
                     title="Return"
                 >
                     <Icon name="i-solar:arrow-left-linear" class="h-6 w-6" />
@@ -665,7 +655,7 @@ onBeforeUnmount(() => {
                     type="button"
                     @click="handleSave()"
                     :disabled="!imgUrl"
-                    class="w-full rounded-md bg-gray-700/50 px-3.5 leading-tight py-2.5 text-center text-sm font-semibold text-white shadow-sm hover:bg-gray-800/50 focus-visible:outline focus-visible:outline-1 focus-visible:outline-offset-2 focus-visible:outline-white flex flex-row items-center gap-2 justify-center disabled:cursor-not-allowed disabled:opacity-60"
+                    class="w-full rounded-md bg-slate-700/90 px-3.5 leading-tight py-2.5 text-center text-sm font-semibold text-white shadow-sm hover:bg-slate-800/90 focus-visible:outline focus-visible:outline-1 focus-visible:outline-offset-2 focus-visible:outline-white flex flex-row items-center gap-2 justify-center disabled:cursor-not-allowed disabled:opacity-60"
                     title="Save"
                 >
                     <Icon
@@ -679,7 +669,7 @@ onBeforeUnmount(() => {
                         type="button"
                         @click="copyImageFromUrl(imgUrl)"
                         :disabled="!imgUrl"
-                        class="w-full rounded-md bg-gray-700/50 px-3.5 leading-tight py-2.5 text-center text-sm font-semibold text-white shadow-sm hover:bg-gray-800/50 focus-visible:outline focus-visible:outline-1 focus-visible:outline-offset-2 focus-visible:outline-white flex flex-row items-center gap-2 justify-center disabled:cursor-not-allowed disabled:opacity-60"
+                        class="w-full rounded-md bg-slate-700/90 px-3.5 leading-tight py-2.5 text-center text-sm font-semibold text-white shadow-sm hover:bg-slate-800/90 focus-visible:outline focus-visible:outline-1 focus-visible:outline-offset-2 focus-visible:outline-white flex flex-row items-center gap-2 justify-center disabled:cursor-not-allowed disabled:opacity-60"
                         title="Copy to clipboard"
                     >
                         <Icon name="i-solar:copy-outline" class="h-6 w-6" />
@@ -687,13 +677,13 @@ onBeforeUnmount(() => {
                     </button>
                     <span
                         id="snack"
-                        class="absolute hidden -top-10 z-100 px-3 py-2 text-xs font-medium text-white bg-gray-950/50 rounded-full shadow-xs"
+                        class="absolute hidden -top-10 z-100 px-3 py-2 text-xs font-medium text-white bg-slate-950/90 rounded-full shadow-xs"
                     >
                         Copied ;)
                     </span>
                 </div>
             </div>
-            <footer class="h-4 w-full text-center pb-4">
+            <footer class="h-4 w-full text-center pb-4 flex align-middle ">
                 <a
                     href="https://salguento.xyz"
                     class="text-white w-full text-xs leading-none"
@@ -723,7 +713,7 @@ onBeforeUnmount(() => {
                 <img
                     :src="imgUrl"
                     alt="Generated Toptop image"
-                    class="max-h-full max-w-full rounded-lg object-contain shadow-2xl"
+                    class="max-h-full max-w-full rounded-[0.625rem] object-contain shadow-2xl"
                     @click.stop
                 />
             </div>
