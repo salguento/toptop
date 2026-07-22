@@ -18,7 +18,7 @@ import getColors from "~/utils/getColors";
 import getGradientPalette, {
     getGradientColorCount,
 } from "~/utils/getGradientPalette";
-import getPalette from "~/utils/getPalette";
+import getArtisticGradient from "~/utils/getArtisticGradient";
 import LastFmErrorCheck from "~/utils/LastFmErrorCheck";
 // Meta
 if (import.meta.server) {
@@ -97,7 +97,6 @@ let albums = [];
 let number1 = [];
 let grid = [];
 let genres = [];
-let colors = [];
 let albumColorSets = [];
 let gradientPalette = null;
 let mess = {};
@@ -131,22 +130,6 @@ const handleClick = async (u, p, k) => {
         artists = topArtists;
         stats = listeningStats;
 
-        if (import.meta.dev) {
-            console.info("[gradient-input]", {
-                topGenre: albumData.topGenre,
-                scrobbleCount: topTracks.scrobbleCount,
-                paletteAlbums: albumData.paletteAlbums.map(
-                    ({ album, artist, count, image }, index) => ({
-                        position: index + 1,
-                        album,
-                        artist,
-                        scrobbles: Number(count),
-                        artwork: image,
-                    }),
-                ),
-            });
-        }
-
         if (
             tracks.tracks.length === 0 ||
             mess.number1.length === 0 ||
@@ -167,28 +150,6 @@ const handleClick = async (u, p, k) => {
             albumColorSets,
             tracks.scrobbleCount,
         );
-        colors = albumColorSets[0] ?? [];
-
-        if (import.meta.dev) {
-            console.info("[gradient-palette]", {
-                ...gradientPalette,
-                albums: mess.paletteAlbums
-                    .slice(0, colorCount)
-                    .map(({ album, artist }, index) => ({
-                        role: [
-                            "primary",
-                            "secondary",
-                            "tertiary",
-                            "quaternary",
-                            "quinary",
-                        ][index],
-                        album,
-                        artist,
-                        selectedColor: gradientPalette.colors[index],
-                        weight: gradientPalette.weights[index],
-                    })),
-            });
-        }
         if (currentGeneration !== generationId) return;
 
         load.value = true;
@@ -357,18 +318,27 @@ const clear = () => {
     number1 = [];
     grid = [];
     genres = [];
-    colors = [];
     albumColorSets = [];
     gradientPalette = null;
 };
 
 const addColors = () => {
-    const b = document.getElementById("background");
-    const p = document.getElementById("post");
-    const palette = getPalette(colors);
-    b.style.backgroundImage =
-        "linear-gradient(" + palette.primary + "," + palette.secondary + ")";
-    p.style.color = palette.text;
+    const background = document.getElementById("background");
+    const post = document.getElementById("post");
+
+    if (!background || !post || !gradientPalette) {
+        throw new Error("Gradient elements or palette were not found");
+    }
+
+    const artisticGradient = getArtisticGradient(mess.topGenre, {
+        colors: gradientPalette.colors,
+        weights: gradientPalette.weights,
+    });
+
+    background.style.backgroundColor = gradientPalette.colors[0];
+    background.style.backgroundImage = artisticGradient.backgroundImage;
+    post.style.color = gradientPalette.text;
+
 };
 
 const copyImageFromUrl = async (imageUrl) => {
