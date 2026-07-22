@@ -67,6 +67,9 @@ const key = config.public.apiKey;
 
 let domtoimage = null;
 let generationId = 0;
+let generatedImageBlob = null;
+let generatedImageUrl = "";
+let snackTimeoutId;
 
 // const topTopStore = useTopTopStore();
 // const { albums, number1, grid, genres, colors, user, tracks, artists } =
@@ -76,12 +79,15 @@ const user = ref({
     img: "",
 });
 const period = ref("7day");
+const hideMissingArtwork = ref(false);
 const load = ref(false);
 const loading = ref(false);
 const previewOpen = ref(false);
+const imageReady = ref(false);
 const timespan = ref("");
 const g = ref("");
 const imgUrl = ref("");
+const snackMessage = ref("");
 
 const date = new Date();
 const day = date.getDate();
@@ -103,9 +109,14 @@ let mess = {};
 let stats;
 
 const handleClick = async (u, p, k) => {
+    if (loading.value) return;
+
+    const username = u.trim();
+    const shouldHideMissingArtwork = hideMissingArtwork.value;
     clear();
     const currentGeneration = generationId;
-    errMsg.value = LastFmErrorCheck(0, user.value.name);
+    user.value.name = username;
+    errMsg.value = LastFmErrorCheck(0, username);
     if (errMsg.value) {
         return;
     }
@@ -115,11 +126,11 @@ const handleClick = async (u, p, k) => {
         setTimespan();
         const [userImage, topTracks, albumData, topArtists, listeningStats] =
             await Promise.all([
-                useGetUserImage(u, k),
-                useGetTracks(u, p, k),
-                useGetAlbums(u, p, k),
-                useGetArtists(u, p, k),
-                useGetListeningStats(u, k, timespan.value),
+                useGetUserImage(username, k),
+                useGetTracks(username, p, k),
+                useGetAlbums(username, p, k, shouldHideMissingArtwork),
+                useGetArtists(username, p, k),
+                useGetListeningStats(username, k, timespan.value),
             ]);
 
         if (currentGeneration !== generationId) return;
@@ -137,6 +148,14 @@ const handleClick = async (u, p, k) => {
         ) {
             errMsg.value =
                 "Not enough listening history for this period. Try a longer period.";
+            return;
+        }
+
+        if (
+            shouldHideMissingArtwork &&
+            mess.artworkCount < 13
+        ) {
+            errMsg.value = `Only ${mess.artworkCount} albums with artwork were found. Try a longer period or disable “Hide missing artwork”.`;
             return;
         }
 
@@ -166,7 +185,11 @@ const handleClick = async (u, p, k) => {
 
         const rawErrorCode =
             err?.response?._data?.error ?? err?.data?.error ?? err?.error;
-        const errorCode = Number(rawErrorCode) || 0;
+        const rawErrorMessage =
+            err?.response?._data?.message ?? err?.data?.message ?? err?.message;
+        const errorCode =
+            Number(rawErrorCode) ||
+            (/user not found/i.test(rawErrorMessage ?? "") ? 6 : 0);
 
         errMsg.value =
             LastFmErrorCheck(errorCode, user.value.name) ||
@@ -228,6 +251,9 @@ const waitForCanvasImages = async () => {
     );
 };
 
+const getArtworkProxyUrl = (artwork) =>
+    artwork ? `/api/image?url=${encodeURIComponent(artwork)}` : "";
+
 const print = async (currentGeneration) => {
     const node = document.getElementById("canvas");
     const printContainer = document.getElementById("print");
@@ -238,7 +264,7 @@ const print = async (currentGeneration) => {
         }
 
         domtoimage ??= await import("dom-to-image-more");
-        const dataUrl = await domtoimage.toPng(node, {
+        const blob = await domtoimage.toBlob(node, {
             copyDefaultStyles: false,
             disableEmbedFonts: true,
             height: 1920,
@@ -247,38 +273,168 @@ const print = async (currentGeneration) => {
 
         if (currentGeneration !== generationId) return;
 
+        const objectUrl = URL.createObjectURL(blob);
         const img = new Image();
-        img.src = dataUrl;
-        printContainer.appendChild(img);
-        imgUrl.value = dataUrl;
+        img.alt = "Generated Toptop image";
+
+        const imageLoaded = new Promise((resolve, reject) => {
+            img.addEventListener("load", resolve, { once: true });
+            img.addEventListener("error", reject, { once: true });
+        });
+
+        img.src = objectUrl;
+        printContainer.replaceChildren(img);
+
+        try {
+            await imageLoaded;
+        } catch {
+            URL.revokeObjectURL(objectUrl);
+            throw new Error("Generated image could not be loaded");
+        }
+
+        if (currentGeneration !== generationId) {
+            URL.revokeObjectURL(objectUrl);
+            return;
+        }
+
+        generatedImageBlob = blob;
+        generatedImageUrl = objectUrl;
+        imgUrl.value = objectUrl;
+        imageReady.value = true;
     } catch (error) {
         if (currentGeneration !== generationId) return;
 
         console.error("Unable to create image", error);
-        snack("Error creating image");
+        load.value = false;
+        throw error;
     }
 };
 
-const handleSave = () => {
-    if (!imgUrl.value) {
+const getGeneratedImageName = () => {
+    const safeUsername =
+        user.value.name.trim().replace(/[^a-z0-9_-]+/gi, "-") || "user";
+    const safePeriod = timespan.value.toLowerCase() || "period";
+    const safeDate = [
+        year,
+        String(month).padStart(2, "0"),
+        String(day).padStart(2, "0"),
+    ].join("-");
+
+    return `toptop-${safeUsername}-${safePeriod}-${safeDate}.png`;
+};
+
+const getGeneratedImageFile = () => {
+    if (!generatedImageBlob || typeof File !== "function") return null;
+
+    return new File(
+        [generatedImageBlob],
+        getGeneratedImageName(),
+        {
+            type: "image/png",
+            lastModified: Date.now(),
+        },
+    );
+};
+
+const canShareImageFile = (file) => {
+    try {
+        return (
+            file &&
+            typeof navigator.share === "function" &&
+            typeof navigator.canShare === "function" &&
+            navigator.canShare({ files: [file] })
+        );
+    } catch {
+        return false;
+    }
+};
+
+const shareImageFile = async (file) => {
+    if (!canShareImageFile(file)) return "unsupported";
+
+    try {
+        await navigator.share({
+            files: [file],
+            title: "My Toptop",
+            text: "My listening stats on Toptop",
+        });
+        return "shared";
+    } catch (error) {
+        if (error?.name === "AbortError") return "cancelled";
+        return "failed";
+    }
+};
+
+const saveImageWithFilePicker = async (suggestedName) => {
+    if (typeof window.showSaveFilePicker !== "function") {
+        return "unsupported";
+    }
+
+    try {
+        const fileHandle = await window.showSaveFilePicker({
+            suggestedName,
+            types: [
+                {
+                    description: "PNG image",
+                    accept: { "image/png": [".png"] },
+                },
+            ],
+        });
+        const writable = await fileHandle.createWritable();
+        await writable.write(generatedImageBlob);
+        await writable.close();
+        return "saved";
+    } catch (error) {
+        if (error?.name === "AbortError") return "cancelled";
+        return "failed";
+    }
+};
+
+const downloadGeneratedImage = (fileName) => {
+    if (!generatedImageBlob || !generatedImageUrl) return false;
+
+    try {
+        const downloadLink = document.createElement("a");
+        downloadLink.href = generatedImageUrl;
+        downloadLink.download = fileName;
+        downloadLink.style.display = "none";
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        downloadLink.remove();
+        return true;
+    } catch {
+        return false;
+    }
+};
+
+const handleSave = async () => {
+    const file = getGeneratedImageFile();
+    if (!imageReady.value || !generatedImageBlob || !generatedImageUrl) {
         snack("Image is not ready yet");
         return;
     }
 
-    const downloadLink = document.createElement("a");
-    downloadLink.href = imgUrl.value;
+    const fileName = file?.name ?? getGeneratedImageName();
+    const saveResult = await saveImageWithFilePicker(fileName);
+    if (saveResult === "saved") {
+        snack("Image saved");
+        return;
+    }
+    if (saveResult === "cancelled") return;
 
-    downloadLink.download =
-        "toptop-" +
-        user.value.name +
-        "-" +
-        timespan.value.toLowerCase() +
-        "-" +
-        fullDate +
-        ".png";
+    const shareResult = file ? await shareImageFile(file) : "unsupported";
+    if (shareResult === "shared") {
+        snack("Opened device share options");
+        return;
+    }
+    if (shareResult === "cancelled") return;
 
-    downloadLink.click();
-    downloadLink.remove();
+    if (downloadGeneratedImage(fileName)) {
+        snack("PNG download started");
+        return;
+    }
+
+    snack("Unable to save the image. Please try again.");
 };
 
 const openPreview = () => {
@@ -308,7 +464,14 @@ const clear = () => {
     }
 
     load.value = false;
+    imageReady.value = false;
     imgUrl.value = "";
+    generatedImageBlob = null;
+    if (generatedImageUrl) {
+        URL.revokeObjectURL(generatedImageUrl);
+        generatedImageUrl = "";
+    }
+    snackMessage.value = "";
     timespan.value = "";
     g.value = "";
     errMsg.value = "";
@@ -338,38 +501,45 @@ const addColors = () => {
     background.style.backgroundColor = gradientPalette.colors[0];
     background.style.backgroundImage = artisticGradient.backgroundImage;
     post.style.color = gradientPalette.text;
-
 };
 
-const copyImageFromUrl = async (imageUrl) => {
+const copyGeneratedImage = async () => {
+    const file = getGeneratedImageFile();
+    if (!imageReady.value || !generatedImageBlob) {
+        snack("Image is not ready yet");
+        return;
+    }
+
     try {
-        if (!navigator.clipboard) {
+        if (
+            typeof ClipboardItem !== "function" ||
+            typeof navigator.clipboard?.write !== "function"
+        ) {
             throw new Error("Clipboard API not supported");
         }
 
-        const response = await fetch(imageUrl);
-        const blob = await response.blob();
-
         const clipboardItem = new ClipboardItem({
-            [blob.type]: blob,
+            "image/png": generatedImageBlob,
         });
 
         await navigator.clipboard.write([clipboardItem]);
-        snack("Copied :3");
-        return true;
-    } catch (error) {
-        snack("Error copying image");
-        return false;
+        snack("Image copied");
+    } catch {
+        const shareResult = file ? await shareImageFile(file) : "unsupported";
+        if (shareResult === "shared") {
+            snack("Clipboard unavailable; opened share options");
+        } else if (shareResult !== "cancelled") {
+            snack("This browser cannot copy images");
+        }
     }
 };
 
 const snack = (message) => {
-    const snack = document.getElementById("snack");
-    snack.textContent = message;
-    snack.classList.remove("hidden");
-    setTimeout(() => {
-        snack.classList.add("hidden");
-    }, 1000);
+    clearTimeout(snackTimeoutId);
+    snackMessage.value = message;
+    snackTimeoutId = setTimeout(() => {
+        snackMessage.value = "";
+    }, 2500);
 };
 
 onMounted(async () => {
@@ -381,6 +551,8 @@ onMounted(async () => {
 
 onBeforeUnmount(() => {
     document.removeEventListener("keydown", handlePreviewKeydown);
+    clearTimeout(snackTimeoutId);
+    if (generatedImageUrl) URL.revokeObjectURL(generatedImageUrl);
 });
 </script>
 
@@ -399,15 +571,25 @@ onBeforeUnmount(() => {
                     <img class="h-9" src="/toptop.svg" alt="Toptop logo" />
                 </div>
             </div>
-            <div v-if="!load" class="flex flex-col gap-2 w-full relative">
-                <div class="flex flex-row gap-2 w-full">
+            <form
+                v-if="!load"
+                class="relative flex w-full flex-col gap-2 px-12"
+                autocomplete="off"
+                @submit.prevent="handleClick(user.name, period, key)"
+            >
+                <div class="flex flex-col gap-2 w-full">
                     <div class="w-full">
                         <input
                             v-model="user.name"
                             type="text"
-                            name="username"
-                            id="username"
-                            autocomplete="given-name"
+                            name="lastfm-profile"
+                            id="lastfm-profile"
+                            autocomplete="off"
+                            autocapitalize="none"
+                            spellcheck="false"
+                            data-bwignore="true"
+                            data-1p-ignore="true"
+                            data-lpignore="true"
                             placeholder="Last.fm user"
                             class="block w-full rounded-[0.625rem] bg-slate-700/90 px-3.5 py-2 text-base text-white focus:outline -outline-offset-2 outline-slate-300/90 placeholder:text-slate-400 focus:-outline-offset-2 focus:outline-white"
                         />
@@ -416,11 +598,11 @@ onBeforeUnmount(() => {
                     <div class="focus-within:relative grid grid-cols-1 w-full">
                         <select
                             v-model="period"
-                            id="country"
-                            name="country"
-                            autocomplete="country"
-                            aria-label="Country"
-                            class="col-start-1 row-start-1 w-full appearance-none rounded-[0.625rem] py-2 pl-3.5 pr-7 text-base text-white focus:outline focus:-outline-offset-2 focus:outline-white sm:text-sm/6 bg-slate-700/90"
+                            id="listening-period"
+                            name="listening-period"
+                            autocomplete="off"
+                            aria-label="Listening period"
+                            class="col-start-1 row-start-1 w-full appearance-none rounded-[0.625rem] bg-slate-700/90 py-2 pl-3.5 pr-7 text-base text-white outline-slate-300/90 focus:outline focus:-outline-offset-2 focus:outline-white"
                         >
                             <option value="7day">Weekly</option>
                             <option value="1month">Monthly</option>
@@ -449,11 +631,32 @@ onBeforeUnmount(() => {
                         {{ errMsg }}
                     </p>
                 </div>
+                <label
+                    for="hide-missing-artwork"
+                    class="flex w-full cursor-pointer items-center gap-3 rounded-[0.625rem] px-3.5 py-2.5 text-sm font-medium text-white"
+                >
+                    <input
+                        id="hide-missing-artwork"
+                        v-model="hideMissingArtwork"
+                        type="checkbox"
+                        class="peer sr-only"
+                    />
+                    <span
+                        aria-hidden="true"
+                        class="flex size-5 shrink-0 items-center justify-center rounded-md border border-slate-400 bg-slate-800/80 transition-colors peer-checked:border-white peer-checked:bg-white peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-white"
+                    >
+                        <Icon
+                            v-if="hideMissingArtwork"
+                            name="i-solar:check-read-linear"
+                            class="size-4 text-slate-800"
+                        />
+                    </span>
+                    <span>Hide missing artwork</span>
+                </label>
                 <div class="w-full">
                     <button
                         id="btn-generate"
-                        @click="handleClick(user.name, period, key)"
-                        type="button"
+                        type="submit"
                         :disabled="loading"
                         class="text-white w-full bg-slate-700/90 hover:bg-slate-50/90 hover:text-slate-700 font-semibold focus:outline focus:-outline-offset-2 focus:outline-white rounded-[0.625rem] text-base leading-tight px-5 py-2.5 text-center me-2 inline-flex items-center justify-center disabled:cursor-not-allowed disabled:opacity-60"
                     >
@@ -478,7 +681,7 @@ onBeforeUnmount(() => {
                         {{ loading ? "Loading" : "Generate" }}
                     </button>
                 </div>
-            </div>
+            </form>
 
             <div
                 id="print"
@@ -566,13 +769,13 @@ onBeforeUnmount(() => {
                                         <img
                                             v-for="i in mess.grid"
                                             :key="i"
-                                            :src="i"
+                                            :src="getArtworkProxyUrl(i)"
                                             alt=""
                                             class="max-w-[246px]"
                                         />
                                         <img
                                             class="w-[512px] shadow-xl col-span-2 col-start-2 row-start-2 row-span-2"
-                                            :src="mess.number1[0].image"
+                                            :src="getArtworkProxyUrl(mess.number1[0].image)"
                                         />
                                     </div>
                                     <div class="text-center w-full">
@@ -679,7 +882,7 @@ onBeforeUnmount(() => {
                     </div>
                 </div>
             </div>
-            <div v-if="load" class="w-full flex flex-row gap-2">
+            <div v-if="imageReady" class="w-full flex flex-row gap-2">
                 <button
                     type="button"
                     @click="clear()"
@@ -692,8 +895,7 @@ onBeforeUnmount(() => {
                 <button
                     type="button"
                     @click="handleSave()"
-                    :disabled="!imgUrl"
-                    class="w-full rounded-md bg-slate-700/90 px-3.5 leading-tight py-2.5 text-center text-sm font-semibold text-white shadow-sm hover:bg-slate-800/90 focus-visible:outline focus-visible:outline-1 focus-visible:outline-offset-2 focus-visible:outline-white flex flex-row items-center gap-2 justify-center disabled:cursor-not-allowed disabled:opacity-60"
+                    class="w-full rounded-md bg-slate-700/90 px-3.5 leading-tight py-2.5 text-center text-sm font-semibold text-white shadow-sm hover:bg-slate-800/90 focus-visible:outline focus-visible:outline-1 focus-visible:outline-offset-2 focus-visible:outline-white flex flex-row items-center gap-2 justify-center"
                     title="Save"
                 >
                     <Icon
@@ -705,27 +907,28 @@ onBeforeUnmount(() => {
                 <div class="w-full relative place-items-center grid">
                     <button
                         type="button"
-                        @click="copyImageFromUrl(imgUrl)"
-                        :disabled="!imgUrl"
-                        class="w-full rounded-md bg-slate-700/90 px-3.5 leading-tight py-2.5 text-center text-sm font-semibold text-white shadow-sm hover:bg-slate-800/90 focus-visible:outline focus-visible:outline-1 focus-visible:outline-offset-2 focus-visible:outline-white flex flex-row items-center gap-2 justify-center disabled:cursor-not-allowed disabled:opacity-60"
+                        @click="copyGeneratedImage()"
+                        class="w-full rounded-md bg-slate-700/90 px-3.5 leading-tight py-2.5 text-center text-sm font-semibold text-white shadow-sm hover:bg-slate-800/90 focus-visible:outline focus-visible:outline-1 focus-visible:outline-offset-2 focus-visible:outline-white flex flex-row items-center gap-2 justify-center"
                         title="Copy to clipboard"
                     >
                         <Icon name="i-solar:copy-outline" class="h-6 w-6" />
                         <span>Copy</span>
                     </button>
                     <span
-                        id="snack"
-                        class="absolute hidden -top-10 z-100 px-3 py-2 text-xs font-medium text-white bg-slate-950/90 rounded-full shadow-xs"
+                        v-if="snackMessage"
+                        role="status"
+                        aria-live="polite"
+                        class="absolute -top-12 z-100 whitespace-nowrap px-3 py-2 text-xs font-medium text-white bg-slate-950/90 rounded-full shadow-xs"
                     >
-                        Copied ;)
+                        {{ snackMessage }}
                     </span>
                 </div>
             </div>
-            <footer class="h-4 w-full text-center pb-4 flex align-middle ">
+            <footer class="flex w-full items-center justify-center pb-1">
                 <a
                     href="https://salguento.xyz"
-                    class="text-white w-full text-xs leading-none"
-                    >Salguento 👾 {{ year }}
+                    class="inline-flex min-h-9 w-full items-center justify-center rounded-md px-3 py-2 text-xs leading-tight text-white focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-white"
+                    >salguento 👾 {{ year }}
                 </a>
             </footer>
         </div>

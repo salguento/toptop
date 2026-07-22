@@ -1,5 +1,5 @@
 const LastFmErrorCheck = (e: number, userName: string): string => {
-  if (!e && !userName) {
+  if (!e && !userName.trim()) {
     return "Please inform a valid Last.fm username.";
   } else if (e) {
     switch (e) {
@@ -16,8 +16,7 @@ const LastFmErrorCheck = (e: number, userName: string): string => {
         return "Invalid format - This service doesn't exist in that format";
         break;
       case 6:
-        return "Invalid parameters - Your request is missing a required parameter";
-        break;
+        return `Last.fm user "${userName}" was not found.`;
       case 7:
         return "Invalid resource specified";
         break;
