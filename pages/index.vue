@@ -18,18 +18,28 @@ import getColors from "~/utils/getColors";
 import getPalette from "~/utils/getPalette";
 import LastFmErrorCheck from "~/utils/LastFmErrorCheck";
 // Meta
-useSeoMeta({
-    title: "Toptop",
-    ogTitle: "Toptop",
-    description: "Unwrap your Last.fm",
-    ogDescription: "Unwrap your Last.fm",
-    ogImage: "/toptop-og.jpeg",
-    ogUrl: "https://toptop.salguento.xyz",
-    twitterTitle: "Toptop",
-    twitterDescription: "Unwrap your Last.fm",
-    twitterImage: "/toptop-og-twitter.jpeg",
-    twitterCard: "summary",
-});
+if (import.meta.server) {
+    useSeoMeta({
+        title: "toptop",
+        description: "Unwrap Last.fm",
+        ogTitle: "toptop",
+        ogDescription: "Unwrap Last.fm",
+        ogType: "website",
+        ogSiteName: "toptop",
+        ogLocale: "en_US",
+        ogUrl: "https://toptop.salguento.xyz/",
+        ogImage: "https://toptop.salguento.xyz/og-image.jpg",
+        ogImageAlt: "toptop — Unwrap Last.fm",
+        ogImageWidth: 1200,
+        ogImageHeight: 630,
+        ogImageType: "image/jpeg",
+        twitterCard: "summary_large_image",
+        twitterTitle: "toptop",
+        twitterDescription: "Unwrap Last.fm",
+        twitterImage: "https://toptop.salguento.xyz/og-image.jpg",
+        twitterImageAlt: "toptop — Unwrap Last.fm",
+    });
+}
 
 useHead({
     htmlAttrs: {
@@ -37,8 +47,12 @@ useHead({
     },
     link: [
         {
+            rel: "canonical",
+            href: "https://toptop.salguento.xyz/",
+        },
+        {
             rel: "icon",
-            type: "image/x-icons",
+            type: "image/x-icon",
             href: "/favicon.ico",
         },
     ],
