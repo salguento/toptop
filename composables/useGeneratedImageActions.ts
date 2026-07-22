@@ -25,13 +25,13 @@ const useGeneratedImageActions = ({
   getFileName,
   notify,
 }: GeneratedImageActionsOptions) => {
+  const imageReady = ref(false);
   const imageUrl = ref("");
   let imageBlob: Blob | null = null;
   let objectUrl = "";
 
-  const imageReady = computed(() => Boolean(imageBlob && objectUrl));
-
   const clearGeneratedImage = () => {
+    imageReady.value = false;
     imageBlob = null;
     imageUrl.value = "";
     if (objectUrl) URL.revokeObjectURL(objectUrl);
@@ -43,6 +43,7 @@ const useGeneratedImageActions = ({
     imageBlob = blob;
     objectUrl = url;
     imageUrl.value = url;
+    imageReady.value = true;
   };
 
   const getGeneratedImageFile = () => {

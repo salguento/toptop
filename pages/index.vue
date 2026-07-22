@@ -412,7 +412,7 @@ onBeforeUnmount(() => {
     >
         <Background />
         <div
-            class="relative z-10 w-full container max-w-lg max-h-full h-fit overflow-scroll outline outline-1 outline-slate-500/20 rounded-[1.25rem] px-4 pt-6 pb-4 md:p-8 bg-slate-900/50 backdrop-blur-3xl flex flex-col items-center gap-4 md:gap-8"
+            class="relative z-10 w-full container max-w-lg max-h-full h-fit overflow-scroll outline outline-1 outline-slate-500/20 rounded-[1.25rem] px-4 pt-6 pb-4 md:px-8 md:pt-8 md:pb-4 bg-slate-900/50 backdrop-blur-3xl flex flex-col items-center gap-4 md:gap-8"
         >
             <div class="flex flex-col text-center">
                 <div
