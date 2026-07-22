@@ -7,10 +7,8 @@ import genreList from "~/static/genreDictionary.json";
 // Store
 // import { useTopTopStore } from "@/stores/TopTopStore";
 // Composables
-import useGetUserImage from "~/composables/useLastFm/useGetUserImage";
-import useGetTracks from "~/composables/useLastFm/useGetUserTracks";
 import useGetAlbums from "~/composables/useLastFm/useGetAlbums";
-import useGetArtists from "~/composables/useLastFm/useGetArtists";
+import useGetListeningSummary from "~/composables/useLastFm/useGetListeningSummary";
 
 //Utils
 import getColors from "~/utils/getColors";
@@ -124,13 +122,19 @@ const handleClick = async (u, p, k) => {
     loading.value = true;
     try {
         setTimespan();
-        const [userData, topTracks, albumData, artistData] =
-            await Promise.all([
-                useGetUserImage(username, k),
-                useGetTracks(username, p, k),
-                useGetAlbums(username, p, k, shouldHideMissingArtwork),
-                useGetArtists(username, p, k),
-            ]);
+        const { userData, topTracks, artistData, topAlbums } =
+            await useGetListeningSummary(
+                username,
+                p,
+                shouldHideMissingArtwork,
+            );
+        const albumData = await useGetAlbums(
+            username,
+            p,
+            k,
+            shouldHideMissingArtwork,
+            topAlbums,
+        );
 
         if (currentGeneration !== generationId) return;
 

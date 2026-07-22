@@ -45,14 +45,17 @@ const useGetAlbums = async (
   timeFrame: string,
   key: string,
   hideMissingArtwork = false,
+  initialPage?: TopAlbums,
 ) => {
   const config = useRuntimeConfig();
   const apiBase = config.public.apiBase;
   const { fetchAlbumGenres } = useGetDiscogGenres();
   const selectedAlbums: AlbumWithArtwork[] = [];
 
-  const fetchPage = (page: number) =>
-    $fetch<TopAlbums>(apiBase, {
+  const fetchPage = (page: number) => {
+    if (page === 1 && initialPage) return Promise.resolve(initialPage);
+
+    return $fetch<TopAlbums>(apiBase, {
       query: {
         method: "user.gettopalbums",
         user: userName,
@@ -63,6 +66,7 @@ const useGetAlbums = async (
         page,
       },
     });
+  };
 
   const resolveArtwork = async (
     album: LastFmAlbum,
