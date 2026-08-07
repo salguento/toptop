@@ -1,5 +1,6 @@
 const ALLOWED_IMAGE_HOSTS = new Set([
   "lastfm.freetls.fastly.net",
+  "lastfm-img.freetls.fastly.net",
   "cdn-images.dzcdn.net",
   "e-cdns-images.dzcdn.net",
   "cdns-images.dzcdn.net",
