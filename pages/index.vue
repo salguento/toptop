@@ -64,7 +64,7 @@ const user = ref({
     img: "",
 });
 const period = ref("7day");
-const hideMissingArtwork = ref(false);
+const hideMissingArtwork = ref(true);
 const load = ref(false);
 const loading = ref(false);
 const previewOpen = ref(false);
