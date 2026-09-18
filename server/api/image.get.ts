@@ -34,6 +34,16 @@ const validateImageUrl = (value: string) => {
   return url;
 };
 
+const normalizeImageUrl = (url: URL) => {
+  // Netlify's runtime cannot currently fetch the `lastfm-img` alias reliably,
+  // although it serves the same assets as the canonical Last.fm Fastly host.
+  if (url.hostname === "lastfm-img.freetls.fastly.net") {
+    url.hostname = "lastfm.freetls.fastly.net";
+  }
+
+  return url;
+};
+
 const fetchImage = async (initialUrl: URL) => {
   let url = initialUrl;
 
@@ -115,7 +125,9 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  const { contentType, data } = await fetchImageOnce(validateImageUrl(imageUrl));
+  const { contentType, data } = await fetchImageOnce(
+    normalizeImageUrl(validateImageUrl(imageUrl)),
+  );
 
   setResponseHeader(event, "Content-Type", contentType);
   setResponseHeader(
