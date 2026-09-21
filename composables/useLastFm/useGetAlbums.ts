@@ -16,9 +16,6 @@ type AlbumWithArtwork = {
   artwork: string;
 };
 
-const getArtworkProxyUrl = (artwork: string) =>
-  `/api/image?url=${encodeURIComponent(artwork)}`;
-
 const isArtworkAvailable = (artwork: string) => {
   if (!artwork) return Promise.resolve(false);
 
@@ -33,10 +30,11 @@ const isArtworkAvailable = (artwork: string) => {
       resolve(available);
     };
 
+    image.crossOrigin = "anonymous";
     image.onload = () => finish(true);
     image.onerror = () => finish(false);
     timeoutId = setTimeout(() => finish(false), ARTWORK_LOAD_TIMEOUT);
-    image.src = getArtworkProxyUrl(artwork);
+    image.src = artwork;
   });
 };
 

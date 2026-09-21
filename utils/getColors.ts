@@ -15,6 +15,7 @@ const loadImage = (src: string) =>
   new Promise<HTMLImageElement>((resolve, reject) => {
     const image = new Image();
 
+    image.crossOrigin = "anonymous";
     image.decoding = "async";
     image.addEventListener(
       "load",
@@ -39,10 +40,8 @@ const loadImage = (src: string) =>
 const getColors = async (image: string) => {
   let distance = 0.2;
   let bestColors: Awaited<ReturnType<typeof extractColors>> = [];
-  const imageUrl = `/api/image?url=${encodeURIComponent(image)}`;
-
   try {
-    const decodedImage = await loadImage(imageUrl);
+    const decodedImage = await loadImage(image);
 
     for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
       const colors = await extractColors(decodedImage, {

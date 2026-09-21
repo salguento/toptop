@@ -245,8 +245,7 @@ const waitForCanvasImages = async () => {
     );
 };
 
-const getArtworkProxyUrl = (artwork) =>
-    artwork ? `/api/image?url=${encodeURIComponent(artwork)}` : "";
+const getArtworkUrl = (artwork) => artwork || "";
 
 const print = async (currentGeneration) => {
     const node = document.getElementById("canvas");
@@ -599,13 +598,15 @@ onBeforeUnmount(() => {
                                         <img
                                             v-for="i in mess.grid"
                                             :key="i"
-                                            :src="getArtworkProxyUrl(i)"
+                                            :src="getArtworkUrl(i)"
+                                            crossorigin="anonymous"
                                             alt=""
                                             class="max-w-[246px]"
                                         />
                                         <img
                                             class="w-[512px] shadow-xl col-span-2 col-start-2 row-start-2 row-span-2"
-                                            :src="getArtworkProxyUrl(mess.number1[0].image)"
+                                            :src="getArtworkUrl(mess.number1[0].image)"
+                                            crossorigin="anonymous"
                                         />
                                     </div>
                                     <div class="text-center w-full">
