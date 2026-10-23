@@ -76,6 +76,12 @@ loaded or required placeholders. Base64 image contents are omitted from logs.
 Server logs use the same prefix. A failed Last.fm attempt followed by a successful
 Deezer attempt means the fallback recovered the cover.
 
+Before trying Deezer, the server tries both Last.fm image hosts. The
+`Alternate Last.fm host recovered cover` message includes the failed attempts
+and the successful URL. If both hosts fail, `failure.attempts` retains both
+diagnostics. The image API request allows 15 seconds for the two host attempts;
+each host has a 6-second budget including redirects and reading the image.
+
 ### Build
 
 Build the application for production:

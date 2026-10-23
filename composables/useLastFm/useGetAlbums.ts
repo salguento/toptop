@@ -10,6 +10,7 @@ const TARGET_ALBUM_COUNT = 13;
 const ALBUMS_PER_PAGE = 50;
 const REQUEST_CONCURRENCY = 3;
 const ARTWORK_LOAD_TIMEOUT = 8000;
+const ARTWORK_REQUEST_TIMEOUT = 15000;
 
 type LastFmAlbum = TopAlbums["topalbums"]["album"][number];
 
@@ -52,9 +53,9 @@ const loadArtwork = async (url: string, context: ArtworkContext) => {
   }
 
   try {
-    const { artwork, error } = await $fetch<ArtworkResponse>("/api/image", {
+    const { artwork, error, attempts, resolvedUrl } = await $fetch<ArtworkResponse>("/api/image", {
       query: { url, format: "data" },
-      timeout: ARTWORK_LOAD_TIMEOUT,
+      timeout: ARTWORK_REQUEST_TIMEOUT,
       retry: 0,
     });
     if (!artwork) {
@@ -66,11 +67,20 @@ const loadArtwork = async (url: string, context: ArtworkContext) => {
       });
       return "";
     }
+    if (attempts?.length) {
+      console.warn("[Toptop artwork] Alternate Last.fm host recovered cover", {
+        ...context,
+        sourceUrl: url,
+        resolvedUrl,
+        attempts,
+      });
+    }
     // Validate the returned bytes without requesting the remote URL again.
     const result = await isArtworkAvailable(artwork);
     const details = {
       ...context,
       sourceUrl: url,
+      resolvedUrl,
       stage: "browser-decode",
       result,
       durationMs: Date.now() - startedAt,

@@ -7,9 +7,12 @@ export type ArtworkFailure = {
   contentType?: string | null;
   code?: string;
   durationMs?: number;
+  attempts?: ArtworkFailure[];
 };
 
 export type ArtworkResponse = {
   artwork: string | null;
   error?: ArtworkFailure;
+  attempts?: ArtworkFailure[];
+  resolvedUrl?: string;
 };
