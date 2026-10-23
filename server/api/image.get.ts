@@ -48,7 +48,10 @@ const fetchImage = async (initialUrl: URL) => {
   let url = initialUrl;
 
   for (let redirect = 0; redirect <= MAX_REDIRECTS; redirect++) {
-    const response = await fetch(url, { redirect: "manual" });
+    const response = await fetch(url, {
+      redirect: "manual",
+      signal: AbortSignal.timeout(6000),
+    });
 
     if (response.status >= 300 && response.status < 400) {
       const location = response.headers.get("location");
@@ -116,7 +119,8 @@ const fetchImageOnce = (url: URL) => {
 };
 
 export default defineEventHandler(async (event) => {
-  const imageUrl = getQuery(event).url;
+  const query = getQuery(event);
+  const imageUrl = query.url;
 
   if (typeof imageUrl !== "string" || !imageUrl) {
     throw createError({
@@ -125,9 +129,28 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  const { contentType, data } = await fetchImageOnce(
-    normalizeImageUrl(validateImageUrl(imageUrl)),
-  );
+  const url = normalizeImageUrl(validateImageUrl(imageUrl));
+  let image: Awaited<ReturnType<typeof fetchImageOnce>>;
+  try {
+    image = await fetchImageOnce(url);
+  } catch (error) {
+    // A missing cover is an expected result during artwork discovery. Return
+    // data rather than an HTTP error so the client can try another provider.
+    if (query.format === "data") {
+      setResponseHeader(event, "Cache-Control", "no-store");
+      return { artwork: null };
+    }
+    throw error;
+  }
+
+  const { contentType, data } = image;
+
+  if (query.format === "data") {
+    setResponseHeader(event, "Cache-Control", "private, max-age=86400");
+    return {
+      artwork: `data:${contentType};base64,${Buffer.from(data).toString("base64")}`,
+    };
+  }
 
   setResponseHeader(event, "Content-Type", contentType);
   setResponseHeader(

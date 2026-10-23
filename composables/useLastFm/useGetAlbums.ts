@@ -39,6 +39,22 @@ const isArtworkAvailable = (artwork: string) => {
   });
 };
 
+const loadArtwork = async (url: string) => {
+  if (!url) return "";
+
+  try {
+    const { artwork } = await $fetch<{ artwork: string | null }>("/api/image", {
+      query: { url, format: "data" },
+      timeout: ARTWORK_LOAD_TIMEOUT,
+      retry: 0,
+    });
+    // Validate the returned bytes without requesting the remote URL again.
+    return artwork && (await isArtworkAvailable(artwork)) ? artwork : "";
+  } catch {
+    return "";
+  }
+};
+
 const useGetAlbums = async (
   userName: string,
   timeFrame: string,
@@ -72,29 +88,18 @@ const useGetAlbums = async (
   ): Promise<AlbumWithArtwork> => {
     const cleanArtist = album.artist.name.replace(/\([^)]*\)/g, "");
     const cleanAlbum = album.name.replace(/\([^)]*\)/g, "");
-    let artwork =
-      album.image[3]?.["#text"] ?? album.image.at(-1)?.["#text"] ?? "";
-    let artworkWasValidated = false;
-
-    if (artwork) {
-      artworkWasValidated = await isArtworkAvailable(artwork);
-      if (!artworkWasValidated) artwork = "";
-    }
+    let artwork = await loadArtwork(
+      album.image[3]?.["#text"] ?? album.image.at(-1)?.["#text"] ?? "",
+    );
 
     if (!artwork) {
       try {
-        artwork = (await useGetArtwork(cleanArtist, cleanAlbum)) ?? "";
+        artwork = await loadArtwork(
+          (await useGetArtwork(cleanArtist, cleanAlbum)) ?? "",
+        );
       } catch {
         artwork = "";
       }
-    }
-
-    if (
-      artwork &&
-      !artworkWasValidated &&
-      !(await isArtworkAvailable(artwork))
-    ) {
-      artwork = "";
     }
 
     return { album, artwork };
