@@ -173,13 +173,6 @@ const fetchImageWithFallback = async (requestedUrl: URL) => {
   for (const url of candidates) {
     try {
       const image = await fetchImageOnce(url);
-      if (attempts.length) {
-        console.info("[Toptop artwork] Alternate Last.fm host recovered cover", {
-          requestedUrl: requestedUrl.toString(),
-          resolvedUrl: image.resolvedUrl,
-          attempts,
-        });
-      }
       return { ...image, attempts };
     } catch (error) {
       const failure = (error as { data: ArtworkFailure }).data;

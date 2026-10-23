@@ -53,7 +53,7 @@ const loadArtwork = async (url: string, context: ArtworkContext) => {
   }
 
   try {
-    const { artwork, error, attempts, resolvedUrl } = await $fetch<ArtworkResponse>("/api/image", {
+    const { artwork, error, resolvedUrl } = await $fetch<ArtworkResponse>("/api/image", {
       query: { url, format: "data" },
       timeout: ARTWORK_REQUEST_TIMEOUT,
       retry: 0,
@@ -66,14 +66,6 @@ const loadArtwork = async (url: string, context: ArtworkContext) => {
         failure: error ?? { stage: "server-response", message: "No artwork or diagnostic returned" },
       });
       return "";
-    }
-    if (attempts?.length) {
-      console.warn("[Toptop artwork] Alternate Last.fm host recovered cover", {
-        ...context,
-        sourceUrl: url,
-        resolvedUrl,
-        attempts,
-      });
     }
     // Validate the returned bytes without requesting the remote URL again.
     const result = await isArtworkAvailable(artwork);
@@ -90,7 +82,6 @@ const loadArtwork = async (url: string, context: ArtworkContext) => {
       console.warn("[Toptop artwork] Browser could not decode cover", details);
       return "";
     }
-    console.info("[Toptop artwork] Cover loaded", details);
     return artwork;
   } catch (error) {
     const failure = error as Error & { statusCode?: number; data?: unknown };
@@ -147,7 +138,6 @@ const useGetAlbums = async (
     );
 
     if (!artwork) {
-      console.info("[Toptop artwork] Trying Deezer fallback", context);
       try {
         artwork = await loadArtwork(
           (await useGetArtwork(cleanArtist, cleanAlbum)) ?? "",
@@ -213,18 +203,6 @@ const useGetAlbums = async (
   }
 
   const chosenAlbums = selectedAlbums.slice(0, TARGET_ALBUM_COUNT);
-  console.info("[Toptop artwork] Selected album summary", {
-    selected: chosenAlbums.length,
-    loaded: chosenAlbums.filter(({ artwork }) => artwork).length,
-    placeholders: chosenAlbums.filter(({ artwork }) => !artwork).length,
-    hideMissingArtwork,
-    albums: chosenAlbums.map(({ album, artwork }, index) => ({
-      rank: index + 1,
-      artist: album.artist.name,
-      album: album.name,
-      result: artwork ? "loaded" : "placeholder",
-    })),
-  });
   const albumGenres = await fetchAlbumGenres(
     chosenAlbums.map(({ album }) => ({
       title: album.name.replace(/\([^)]*\)/g, ""),
