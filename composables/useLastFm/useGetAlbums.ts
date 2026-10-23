@@ -4,6 +4,7 @@ import { useGetDiscogGenres } from "../useDiscogs/useGetDiscogGenres";
 import getTopGenre from "~/utils/getTopGenre";
 import { useGetArtwork } from "../useDeezer/useGetArtwork";
 import { ARTWORK_PLACEHOLDER } from "~/utils/artwork";
+import type { ArtworkResponse } from "~/types/Artwork";
 
 const TARGET_ALBUM_COUNT = 13;
 const ALBUMS_PER_PAGE = 50;
@@ -17,40 +18,81 @@ type AlbumWithArtwork = {
   artwork: string;
 };
 
-const isArtworkAvailable = (artwork: string) => {
-  if (!artwork) return Promise.resolve(false);
+type ArtworkContext = {
+  artist: string;
+  album: string;
+  provider: "Last.fm" | "Deezer";
+};
 
-  return new Promise<boolean>((resolve) => {
+const isArtworkAvailable = (artwork: string) => {
+  return new Promise<"loaded" | "decode-error" | "timeout">((resolve) => {
     const image = new Image();
     let timeoutId: ReturnType<typeof setTimeout>;
 
-    const finish = (available: boolean) => {
+    const finish = (result: "loaded" | "decode-error" | "timeout") => {
       image.onload = null;
       image.onerror = null;
       clearTimeout(timeoutId);
-      resolve(available);
+      resolve(result);
     };
 
     image.crossOrigin = "anonymous";
-    image.onload = () => finish(true);
-    image.onerror = () => finish(false);
-    timeoutId = setTimeout(() => finish(false), ARTWORK_LOAD_TIMEOUT);
+    image.onload = () => finish("loaded");
+    image.onerror = () => finish("decode-error");
+    timeoutId = setTimeout(() => finish("timeout"), ARTWORK_LOAD_TIMEOUT);
     image.src = artwork;
   });
 };
 
-const loadArtwork = async (url: string) => {
-  if (!url) return "";
+const loadArtwork = async (url: string, context: ArtworkContext) => {
+  const startedAt = Date.now();
+  if (!url) {
+    console.warn("[Toptop artwork] Provider returned no cover URL", context);
+    return "";
+  }
 
   try {
-    const { artwork } = await $fetch<{ artwork: string | null }>("/api/image", {
+    const { artwork, error } = await $fetch<ArtworkResponse>("/api/image", {
       query: { url, format: "data" },
       timeout: ARTWORK_LOAD_TIMEOUT,
       retry: 0,
     });
+    if (!artwork) {
+      console.warn("[Toptop artwork] Server could not load cover", {
+        ...context,
+        sourceUrl: url,
+        durationMs: Date.now() - startedAt,
+        failure: error ?? { stage: "server-response", message: "No artwork or diagnostic returned" },
+      });
+      return "";
+    }
     // Validate the returned bytes without requesting the remote URL again.
-    return artwork && (await isArtworkAvailable(artwork)) ? artwork : "";
-  } catch {
+    const result = await isArtworkAvailable(artwork);
+    const details = {
+      ...context,
+      sourceUrl: url,
+      stage: "browser-decode",
+      result,
+      durationMs: Date.now() - startedAt,
+      dataUrlLength: artwork.length,
+    };
+    if (result !== "loaded") {
+      console.warn("[Toptop artwork] Browser could not decode cover", details);
+      return "";
+    }
+    console.info("[Toptop artwork] Cover loaded", details);
+    return artwork;
+  } catch (error) {
+    const failure = error as Error & { statusCode?: number; data?: unknown };
+    console.warn("[Toptop artwork] Image API request failed", {
+      ...context,
+      sourceUrl: url,
+      stage: "image-api",
+      durationMs: Date.now() - startedAt,
+      message: failure.message,
+      statusCode: failure.statusCode,
+      failure: failure.data,
+    });
     return "";
   }
 };
@@ -88,18 +130,34 @@ const useGetAlbums = async (
   ): Promise<AlbumWithArtwork> => {
     const cleanArtist = album.artist.name.replace(/\([^)]*\)/g, "");
     const cleanAlbum = album.name.replace(/\([^)]*\)/g, "");
+    const context = { artist: album.artist.name, album: album.name };
     let artwork = await loadArtwork(
       album.image[3]?.["#text"] ?? album.image.at(-1)?.["#text"] ?? "",
+      { ...context, provider: "Last.fm" },
     );
 
     if (!artwork) {
+      console.info("[Toptop artwork] Trying Deezer fallback", context);
       try {
         artwork = await loadArtwork(
           (await useGetArtwork(cleanArtist, cleanAlbum)) ?? "",
+          { ...context, provider: "Deezer" },
         );
-      } catch {
+      } catch (error) {
+        const failure = error as Error & { statusCode?: number };
+        console.warn("[Toptop artwork] Deezer lookup failed", {
+          ...context,
+          stage: "deezer-search",
+          message: failure.message,
+          statusCode: failure.statusCode,
+        });
         artwork = "";
       }
+    }
+
+    if (!artwork) {
+      console.warn("[Toptop artwork] No usable cover; album will be " +
+        (hideMissingArtwork ? "skipped" : "shown with a placeholder"), context);
     }
 
     return { album, artwork };
@@ -145,6 +203,18 @@ const useGetAlbums = async (
   }
 
   const chosenAlbums = selectedAlbums.slice(0, TARGET_ALBUM_COUNT);
+  console.info("[Toptop artwork] Selected album summary", {
+    selected: chosenAlbums.length,
+    loaded: chosenAlbums.filter(({ artwork }) => artwork).length,
+    placeholders: chosenAlbums.filter(({ artwork }) => !artwork).length,
+    hideMissingArtwork,
+    albums: chosenAlbums.map(({ album, artwork }, index) => ({
+      rank: index + 1,
+      artist: album.artist.name,
+      album: album.name,
+      result: artwork ? "loaded" : "placeholder",
+    })),
+  });
   const albumGenres = await fetchAlbumGenres(
     chosenAlbums.map(({ album }) => ({
       title: album.name.replace(/\([^)]*\)/g, ""),

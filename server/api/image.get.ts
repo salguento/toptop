@@ -1,3 +1,5 @@
+import type { ArtworkFailure } from "~/types/Artwork";
+
 const ALLOWED_IMAGE_HOSTS = new Set([
   "lastfm.freetls.fastly.net",
   "lastfm-img.freetls.fastly.net",
@@ -46,64 +48,101 @@ const normalizeImageUrl = (url: URL) => {
 
 const fetchImage = async (initialUrl: URL) => {
   let url = initialUrl;
+  const startedAt = Date.now();
+  let stage = "fetch";
+  let upstreamStatus: number | undefined;
+  let contentType: string | null = null;
 
-  for (let redirect = 0; redirect <= MAX_REDIRECTS; redirect++) {
-    const response = await fetch(url, {
-      redirect: "manual",
-      signal: AbortSignal.timeout(6000),
-    });
+  try {
+    for (let redirect = 0; redirect <= MAX_REDIRECTS; redirect++) {
+      stage = "fetch";
+      upstreamStatus = undefined;
+      contentType = null;
+      const response = await fetch(url, {
+        redirect: "manual",
+        signal: AbortSignal.timeout(6000),
+      });
+      upstreamStatus = response.status;
+      contentType = response.headers.get("content-type");
 
-    if (response.status >= 300 && response.status < 400) {
-      const location = response.headers.get("location");
-      if (!location || redirect === MAX_REDIRECTS) {
+      if (response.status >= 300 && response.status < 400) {
+        stage = "redirect";
+        const location = response.headers.get("location");
+        if (!location || redirect === MAX_REDIRECTS) {
+          throw createError({
+            statusCode: 502,
+            statusMessage: "Unable to follow image redirect",
+          });
+        }
+
+        url = validateImageUrl(new URL(location, url).toString());
+        continue;
+      }
+
+      if (!response.ok) {
         throw createError({
           statusCode: 502,
-          statusMessage: "Unable to follow image redirect",
+          statusMessage: "Unable to fetch image",
         });
       }
 
-      url = validateImageUrl(new URL(location, url).toString());
-      continue;
+      stage = "content-type";
+      contentType = contentType?.split(";")[0] ?? null;
+      if (!contentType?.startsWith("image/")) {
+        throw createError({
+          statusCode: 415,
+          statusMessage: "Remote resource is not an image",
+        });
+      }
+
+      stage = "size";
+      const declaredSize = Number(response.headers.get("content-length"));
+      if (declaredSize > MAX_IMAGE_SIZE) {
+        throw createError({
+          statusCode: 413,
+          statusMessage: "Image is too large",
+        });
+      }
+
+      stage = "read-body";
+      const data = await response.arrayBuffer();
+      stage = "size";
+      if (data.byteLength > MAX_IMAGE_SIZE) {
+        throw createError({
+          statusCode: 413,
+          statusMessage: "Image is too large",
+        });
+      }
+
+      return { contentType, data };
     }
 
-    if (!response.ok) {
-      throw createError({
-        statusCode: 502,
-        statusMessage: "Unable to fetch image",
-      });
-    }
-
-    const contentType = response.headers.get("content-type")?.split(";")[0];
-    if (!contentType?.startsWith("image/")) {
-      throw createError({
-        statusCode: 415,
-        statusMessage: "Remote resource is not an image",
-      });
-    }
-
-    const declaredSize = Number(response.headers.get("content-length"));
-    if (declaredSize > MAX_IMAGE_SIZE) {
-      throw createError({
-        statusCode: 413,
-        statusMessage: "Image is too large",
-      });
-    }
-
-    const data = await response.arrayBuffer();
-    if (data.byteLength > MAX_IMAGE_SIZE) {
-      throw createError({
-        statusCode: 413,
-        statusMessage: "Image is too large",
-      });
-    }
-
-    return { contentType, data };
+    throw createError({
+      statusCode: 502,
+      statusMessage: "Unable to fetch image",
+    });
+  } catch (error) {
+    const failure = error as Error & {
+      statusCode?: number;
+      cause?: { code?: string };
+    };
+    const diagnostic: ArtworkFailure = {
+      stage,
+      message: failure.message,
+      url: url.toString(),
+      statusCode: failure.statusCode ?? 502,
+      upstreamStatus,
+      contentType,
+      code: failure.cause?.code ?? failure.name,
+      durationMs: Date.now() - startedAt,
+    };
+    console.warn("[Toptop artwork] Server image request failed", diagnostic);
+    throw createError({
+      statusCode: diagnostic.statusCode,
+      statusMessage: "Unable to fetch image",
+      data: diagnostic,
+    });
   }
-
-  throw createError({
-    statusCode: 502,
-    statusMessage: "Unable to fetch image",
-  });
 };
 
 const fetchImageOnce = (url: URL) => {
@@ -138,7 +177,10 @@ export default defineEventHandler(async (event) => {
     // data rather than an HTTP error so the client can try another provider.
     if (query.format === "data") {
       setResponseHeader(event, "Cache-Control", "no-store");
-      return { artwork: null };
+      return {
+        artwork: null,
+        error: (error as { data?: ArtworkFailure }).data,
+      };
     }
     throw error;
   }

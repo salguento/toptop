@@ -226,12 +226,30 @@ const waitForCanvasImages = async () => {
 
     const images = Array.from(node.querySelectorAll("img"));
     await Promise.all(
-        images.map((image) => {
-            if (image.complete) return Promise.resolve();
+        images.map((image, index) => {
+            const reportFailure = (reason) => {
+                const src = image.currentSrc || image.src;
+                console.warn("[Toptop artwork] Canvas image failed", {
+                    stage: "canvas-image",
+                    index,
+                    alt: image.alt,
+                    reason,
+                    source: src.startsWith("data:") ? src.split(",")[0] : src,
+                    sourceLength: src.length,
+                    naturalWidth: image.naturalWidth,
+                    naturalHeight: image.naturalHeight,
+                });
+            };
+            if (image.complete) {
+                if (!image.naturalWidth) reportFailure("broken-image");
+                return Promise.resolve();
+            }
 
             return new Promise((resolve) => {
                 let timeoutId;
-                const finish = () => {
+                const finish = (event) => {
+                    if (event?.type === "error") reportFailure("load-error");
+                    else if (!event) reportFailure("timeout-after-5000ms");
                     image.removeEventListener("load", finish);
                     image.removeEventListener("error", finish);
                     clearTimeout(timeoutId);
@@ -264,6 +282,15 @@ const print = async (currentGeneration) => {
             imagePlaceholder: ARTWORK_PLACEHOLDER,
             requestInterceptor: interceptExportResource,
             filter: (element) => element.nodeName !== "SCRIPT",
+            onImageError: ({ url, message, status, willUsePlaceholder }) => {
+                console.warn("[Toptop artwork] Export resource failed", {
+                    stage: "export",
+                    url: url.startsWith("data:") ? url.split(",")[0] : url,
+                    message,
+                    status,
+                    willUsePlaceholder,
+                });
+            },
             height: 1920,
             width: 1080,
         });
