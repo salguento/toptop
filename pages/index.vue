@@ -11,6 +11,7 @@ import getGradientPalette, {
 } from "~/utils/getGradientPalette";
 import getArtisticGradient from "~/utils/getArtisticGradient";
 import LastFmErrorCheck from "~/utils/LastFmErrorCheck";
+import { ARTWORK_PLACEHOLDER, interceptExportResource } from "~/utils/artwork";
 // Meta
 if (import.meta.server) {
     useSeoMeta({
@@ -122,7 +123,7 @@ const handleClick = async (u, p, k) => {
 
         if (currentGeneration !== generationId) return;
 
-        user.value.img = userData.image;
+        user.value.img = userData.image || ARTWORK_PLACEHOLDER;
         tracks = {
             ...topTracks,
             scrobbleCount:
@@ -245,7 +246,7 @@ const waitForCanvasImages = async () => {
     );
 };
 
-const getArtworkUrl = (artwork) => artwork || "";
+const getArtworkUrl = (artwork) => artwork || ARTWORK_PLACEHOLDER;
 
 const print = async (currentGeneration) => {
     const node = document.getElementById("canvas");
@@ -260,6 +261,9 @@ const print = async (currentGeneration) => {
         const blob = await domToImage.toBlob(node, {
             copyDefaultStyles: false,
             disableEmbedFonts: true,
+            imagePlaceholder: ARTWORK_PLACEHOLDER,
+            requestInterceptor: interceptExportResource,
+            filter: (element) => element.nodeName !== "SCRIPT",
             height: 1920,
             width: 1080,
         });

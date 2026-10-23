@@ -3,6 +3,7 @@ import type { Genre } from "~/types/TagsLastFm";
 import { useGetDiscogGenres } from "../useDiscogs/useGetDiscogGenres";
 import getTopGenre from "~/utils/getTopGenre";
 import { useGetArtwork } from "../useDeezer/useGetArtwork";
+import { ARTWORK_PLACEHOLDER } from "~/utils/artwork";
 
 const TARGET_ALBUM_COUNT = 13;
 const ALBUMS_PER_PAGE = 50;
@@ -75,7 +76,7 @@ const useGetAlbums = async (
       album.image[3]?.["#text"] ?? album.image.at(-1)?.["#text"] ?? "";
     let artworkWasValidated = false;
 
-    if (hideMissingArtwork && artwork) {
+    if (artwork) {
       artworkWasValidated = await isArtworkAvailable(artwork);
       if (!artworkWasValidated) artwork = "";
     }
@@ -89,7 +90,6 @@ const useGetAlbums = async (
     }
 
     if (
-      hideMissingArtwork &&
       artwork &&
       !artworkWasValidated &&
       !(await isArtworkAvailable(artwork))
@@ -158,14 +158,16 @@ const useGetAlbums = async (
     album: album.name,
     artist: album.artist.name,
     count: album.playcount,
-    image: artwork,
+    image: artwork || ARTWORK_PLACEHOLDER,
   });
 
   return {
     artworkCount: processedAlbums.length,
     totalAlbums: totalAlbumCount,
     albums: processedAlbums.slice(1, 5).map(toDisplayAlbum),
-    grid: processedAlbums.slice(1).map(({ artwork }) => artwork),
+    grid: processedAlbums
+      .slice(1)
+      .map(({ artwork }) => artwork || ARTWORK_PLACEHOLDER),
     number1: processedAlbums.slice(0, 1).map(toDisplayAlbum),
     paletteAlbums: processedAlbums.slice(0, 5).map(toDisplayAlbum),
     topGenre: getTopGenre(
