@@ -17,21 +17,35 @@ const color = (hex, area, saturation = 0, lightness = 0.5) => {
   };
 };
 
-test("dominant neutral wins over a small vibrant accent without mutating input", () => {
+test("vibrant artwork colors win over dominant neutrals without mutating input", () => {
   for (const [hex, lightness] of [["#000000", 0], ["#ffffff", 1], ["#777777", 0.47]]) {
     const candidates = [color("#ff0000", 0.1, 1), color(hex, 0.9, 0, lightness)];
     const original = structuredClone(candidates);
     const result = getGradientPalette([candidates, candidates], 300);
-    assert.deepEqual(result.colors, [hex, hex]);
+    assert.deepEqual(result.colors, ["#ff0000", "#ff0000"]);
     assert.deepEqual(candidates, original);
   }
 });
 
-test("album selection depends on area even when previous albums share its dominant color", () => {
-  const dominant = color("#465e70", 0.8, 0.2);
-  const accent = color("#ff6600", 0.2, 1);
-  const result = getGradientPalette([[dominant], [accent, dominant]], 300);
-  assert.deepEqual(result.colors, [dominant.hex, dominant.hex]);
+test("tiny saturated noise does not replace a representative artwork color", () => {
+  const representative = color("#465e70", 0.995, 0.2);
+  const noise = color("#ff6600", 0.005, 1);
+  const candidates = [noise, representative];
+  const result = getGradientPalette([candidates, candidates], 300);
+  assert.deepEqual(result.colors, [representative.hex, representative.hex]);
+});
+
+test("monochrome covers retain their neutral color", () => {
+  for (const hex of ["#000000", "#ffffff", "#777777"]) {
+    const candidates = [color(hex, 1)];
+    assert.deepEqual(getGradientPalette([candidates, candidates], 300).colors, [hex, hex]);
+  }
+});
+
+test("coverage still favors representative colors among equally vivid candidates", () => {
+  const candidates = [color("#ff0000", 0.1, 1), color("#0000ff", 0.9, 1)];
+  const result = getGradientPalette([candidates, candidates], 300);
+  assert.deepEqual(result.colors, ["#0000ff", "#0000ff"]);
 });
 
 test("scrobble thresholds preserve counts, album order and weights", () => {

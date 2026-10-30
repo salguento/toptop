@@ -56,14 +56,31 @@ export const getGradientColorWeights = (count: GradientColorCount) => [
   ...COLOR_WEIGHTS[count],
 ];
 
-// Area is the fraction of sampled artwork pixels represented by each color.
-// Keep neutrals and repeated colors: they may define the cover's identity.
-const selectAlbumColor = (candidates: ExtractedArtworkColor[]) =>
-  candidates.reduce<ExtractedArtworkColor | undefined>(
-    (dominant, candidate) =>
-      !dominant || candidate.area > dominant.area ? candidate : dominant,
-    undefined,
+const vibrancyScore = (color: ExtractedArtworkColor) => {
+  const balancedLightness = 1 - Math.abs(clamp(color.lightness) - 0.5) * 2;
+  return (
+    clamp(color.saturation) * 0.5 +
+    clamp(color.intensity) * 0.25 +
+    Math.sqrt(clamp(color.area)) * 0.2 +
+    balancedLightness * 0.05
   );
+};
+
+const selectAlbumColor = (candidates: ExtractedArtworkColor[]) => {
+  const largestArea = candidates.reduce((area, color) => Math.max(area, color.area), 0);
+  // Favor vivid colors with a meaningful presence, ignoring tiny accent/noise
+  // clusters. Relative coverage also supports artwork with transparent regions.
+  const minimumArea = Math.min(0.01, largestArea * 0.05);
+  return candidates
+    .filter((color) => color.area >= minimumArea)
+    .reduce<ExtractedArtworkColor | undefined>((selected, candidate) => {
+      if (!selected) return candidate;
+      const difference = vibrancyScore(candidate) - vibrancyScore(selected);
+      return difference > 0 || (difference === 0 && candidate.area > selected.area)
+        ? candidate
+        : selected;
+    }, undefined);
+};
 
 const hexToRgb = (hex: string) => {
   const normalized = hex.replace("#", "");
@@ -126,7 +143,7 @@ const harmonizeColors = (colors: string[], weights: number[]) => {
   });
 
   // A small perceptual blend softens differences while retaining each cover's
-  // dominant color. Using the existing weights preserves album prominence.
+  // vibrant color. Using the existing weights preserves album prominence.
   const strength = 0.12;
   return palette.map((color) =>
     fromOklab([
@@ -188,14 +205,14 @@ export const getGradientPalette = (
 ): GradientPalette => {
   const colorCount = getGradientColorCount(scrobbleCount);
   const weights = getGradientColorWeights(colorCount);
-  const dominantColors: string[] = [];
+  const selectedColors: string[] = [];
 
   for (let index = 0; index < colorCount; index++) {
     const candidate = selectAlbumColor(albumColorSets[index] ?? []);
-    dominantColors.push(candidate?.hex ?? FALLBACK_COLORS[index]);
+    selectedColors.push(candidate?.hex ?? FALLBACK_COLORS[index]);
   }
 
-  const colors = harmonizeColors(dominantColors, weights);
+  const colors = harmonizeColors(selectedColors, weights);
   const { text, contrast } = getTextContrast(colors, weights);
 
   return {
